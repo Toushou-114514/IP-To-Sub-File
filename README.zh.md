@@ -16,7 +16,7 @@
 
 在线运行 [打开网页](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
-[完整教程](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/User%20Guide.zh.md)
+[完整使用教程/指南](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/User%20Guide.zh.md)
 
 ---
 ## 功能
