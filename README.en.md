@@ -16,6 +16,8 @@ Single file, zero dependencies, pure front end — just open the page and use it
 
 Run online: [Open the web app](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
+[Detailed User Guide / Tutorial](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/User%20Guide.en.md)
+
 ---
 ## Features
 
