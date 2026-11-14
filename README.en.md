@@ -10,6 +10,10 @@ Single file, zero dependencies, pure front end — just open the page and use it
 ![CSS](https://img.shields.io/badge/CSS-20%25-563d7c?style=flat-square&logo=css3)
 ![JavaScript](https://img.shields.io/badge/JavaScript-10%25-f1e05a?style=flat-square&logo=javascript)
 
+[English](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.en.md)
+[简体中文](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.zh.md)
+[繁體中文](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.md)
+
 Run online: [Open the web app](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
 ---
