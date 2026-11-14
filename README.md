@@ -17,6 +17,8 @@
 
 線上使用 [開啟網頁](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
+[详细使用教程/指南](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/User%20Guide.zht.md)
+
 ---
 ## 功能
 
