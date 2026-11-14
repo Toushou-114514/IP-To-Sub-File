@@ -6,6 +6,10 @@
 
 ---
 
+![HTML](https://img.shields.io/badge/HTML-70%25-e34c26?style=flat-square&logo=html5)
+![CSS](https://img.shields.io/badge/CSS-20%25-563d7c?style=flat-square&logo=css3)
+![JavaScript](https://img.shields.io/badge/JavaScript-10%25-f1e05a?style=flat-square&logo=javascript)
+
 在线运行 [打开网页](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
 ---
