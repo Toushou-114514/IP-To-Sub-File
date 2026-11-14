@@ -15,7 +15,7 @@
 [繁體中文](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.md)
 
 
-##線上使用 [開啟網頁](https://toushou-114514.github.io/IP-To-Subscription-File/)
+線上使用 [開啟網頁](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
 ---
 ## 功能
