@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>IP转订阅文件</title>
+<script>
+(function () {
+    try {
+        var m = localStorage.getItem("node-tool-theme") || "auto";
+        var dark = m === "dark" || (m === "auto" && window.matchMedia &&
+                   window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    } catch (e) {
+        document.documentElement.setAttribute("data-theme", "light");
+    }
+})();
+</script>
+<style>
+    :root {
+        color-scheme: light;
+        --page: #f6f7f9;
+        --card: #ffffff;
+        --fg: #101828;
+        --muted: #667085;
+        --line: #e4e7ec;
+        --soft: #f2f4f7;
+        --field: #ffffff;
+        --accent: #2563eb;
+        --accent-2: #1d4ed8;
+        --accent-soft: #eff4ff;
+        --on-accent: #ffffff;
+        --ok: #067647;
+        --warn: #b54708;
+        --err: #b42318;
+        --ring: 0 0 0 3px rgba(37, 99, 235, .14);
+        --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .04);
+    }
+
+    :root[data-theme="dark"] {
+        color-scheme: dark;
+        --page: #0b0d11;
+        --card: #12151c;
+        --fg: #e7eaf0;
+        --muted: #98a1b3;
+        --line: #232936;
+        --soft: #171b23;
+        --field: #0f131a;
+        --accent: #5b93ff;
+        --accent-2: #77a6ff;
+        --accent-soft: #16233a;
+        --on-accent: #08111f;
+        --ok: #4ade80;
+        --warn: #fbbf24;
+        --err: #f87171;
+        --ring: 0 0 0 3px rgba(91, 147, 255, .25);
+        --shadow: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        background: var(--page);
+        color: var(--fg);
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI",
+              "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .page { max-width: 760px; margin: 0 auto; padding: 22px 16px 44px; }
+
+    .topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    h1 { margin: 0 0 4px; font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
+    .sub { margin: 0; max-width: 48ch; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+
+    .top-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+
+    .card {
+        padding: 16px;
+        margin: 0 0 12px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+    }
+
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+    }
+
+    .note { margin: 8px 0 12px; color: var(--muted); font-size: 12.5px; line-height: 1.65; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+    .field label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12.5px; }
+
+    input[type="text"], input[type="number"], select, textarea {
+        width: 100%;
+        padding: 9px 11px;
+        color: var(--fg);
+        font: inherit;
+        font-size: 14px;
+        background: var(--field);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        outline: none;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus,
+    select:focus, textarea:focus {
+        border-color: var(--accent);
+        box-shadow: var(--ring);
+    }
+
+    textarea { resize: vertical; line-height: 1.65; }
+
+    textarea.mono, input.mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12.5px;
+    }
+
+    #ips { min-height: 118px; }
+
+    #out {
+        min-height: 280px;
+        margin-top: 12px;
+        background: var(--soft);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        white-space: pre;
+        overflow: auto;
+    }
+
+    .list-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .formats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    @media (max-width: 420px) { .formats { grid-template-columns: 1fr; } }
+
+    .fmt {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 11px 12px;
+        font-size: 13.5px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+        transition: border-color .15s, background .15s;
+    }
+
+    .fmt input { margin: 0; accent-color: var(--accent); }
+    .fmt:hover { border-color: var(--accent); }
+    .fmt.active { border-color: var(--accent); background: var(--accent-soft); }
+
+    .row { display: flex; gap: 8px; margin-top: 10px; }
+    .row .btn { flex: 1; }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 16px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--fg);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background .15s, border-color .15s, color .15s;
+    }
+
+    .btn:hover { background: var(--soft); }
+
+    .btn.primary {
+        width: 100%;
+        padding: 12px;
+        color: var(--on-accent);
+        background: var(--accent);
+        border-color: var(--accent);
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+    .btn.primary:disabled { opacity: .55; cursor: not-allowed; }
+
+    .btn.small { padding: 6px 11px; font-size: 12.5px; }
+
+    .link { color: var(--accent); font-size: 12.5px; text-decoration: none; }
+    .link:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+    .status { margin: 10px 0 0; min-height: 1.4em; font-size: 12.5px; color: var(--muted); }
+    .status.ok { color: var(--ok); }
+    .status.warn { color: var(--warn); }
+    .status.err { color: var(--err); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+
+    .chips label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .chips input { margin: 0; accent-color: var(--accent); }
+
+    .help { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+
+    code {
+        padding: 1px 5px;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12px;
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 5px;
+    }
+
+    .noscript-box {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        color: var(--err);
+        font-size: 13px;
+        background: var(--card);
+        border: 1px solid var(--err);
+        border-radius: 10px;
+    }
+
+    footer {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12.5px;
+        text-align: center;
+        line-height: 1.9;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+    .boot { margin-top: 8px; font-size: 11.5px; }
+    .boot.ok { color: var(--muted); }
+    .boot.bad {
+        display: inline-block;
+        padding: 4px 10px;
+        color: #fff;
+        background: var(--err);
+        border-radius: 6px;
+    }
+
+    [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="page">
+    <header class="topbar">
+        <div>
+            <h1>IP转订阅文件 IP To Subscription File</h1>
+            <p class="sub">把 IP / 域名列表转换成 Clash、sing-box、Shadowrocket、v2rayN 可直接导入的配置</p>
+        </div>
+        <div class="top-actions">
+            <button type="button" class="btn small" id="theme">跟随系统</button>
+        </div>
+    </header>
+
+    <noscript>
+        <div class="noscript-box">
+            当前环境没有运行 JavaScript，转换无法工作。请用 Chrome、Edge 等浏览器直接打开本文件。
+        </div>
+    </noscript>
+
+    <section class="card">
+        <h2><span class="num">1</span><span>节点列表</span></h2>
+        <p class="note">每行一条，格式 IP 或域名#国家码 名称，端口可以写在地址里。可以前往BestCF上优选IP</p>
+        <textarea id="ips" class="mono" spellcheck="false"
+placeholder="格式
+1.1.1.1#US 美国-01
+example.com#JP 日本优选
+104.16.0.1:2053#HK 香港
+一行一个
+"></textarea>
+        <div class="list-foot">
+            <span class="status" id="count">0 条</span>
+            <a class="link" href="https://bestcf.fxxk.dedyn.io/" target="_blank" rel="noopener">没有 IP？点击这里优选 IP（BestCF)</a>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2><span class="num">2</span><span>节点参数</span></h2>
+        <p class="note">参数会套用到上面所有节点，也可以粘贴一条分享链接自动填入。</p>
+
+        <div class="field" style="margin-bottom:14px">
+            <label for="import">从节点链接导入（可选）</label>
+            <div style="display:flex;gap:8px">
+                <input id="import" class="mono" type="text"
+                       placeholder="vless:// vmess:// trojan:// ss:// hysteria2://">
+                <button type="button" class="btn" id="importBtn">导入</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="field">
+                <label for="type">协议</label>
+                <select id="type">
+                    <option value="vless">VLESS</option>
+                    <option value="vmess">VMess</option>
+                    <option value="trojan">Trojan</option>
+                    <option value="ss">Shadowsocks</option>
+                    <option value="hysteria2">Hysteria2</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="port">端口</label>
+                <input id="port" type="number" value="443" min="1" max="65535">
+            </div>
+
+            <div class="field" data-for="vless vmess">
+                <label for="uuid">UUID</label>
+                <input id="uuid" class="mono" type="text" placeholder="留空自动生成">
+            </div>
+
+            <div class="field" data-for="trojan ss hysteria2">
+                <label for="password">密码</label>
+                <input id="password" class="mono" type="text" placeholder="留空自动生成">
+            </div>
+
+            <div class="field" data-for="ss">
+                <label for="method">加密方式</label>
+                <select id="method">
+                    <option>aes-256-gcm</option>
+                    <option>aes-128-gcm</option>
+                    <option>chacha20-ietf-poly1305</option>
+                    <option>2022-blake3-aes-256-gcm</option>
+                </select>
+            </div>
+
+            <div class="field" data-for="vless vmess trojan">
+                <label for="transport">传输方式</label>
+                <select id="transport">
+                    <option value="ws">WebSocket</option>
+                    <option value="tcp">TCP</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chips">
+            <label data-for="vless vmess"><input type="checkbox" id="tls" checked> <span>TLS</span></label>
+            <label data-for="trojan hysteria2"><input type="checkbox" id="insecure"> <span>跳过证书验证</span></label>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2><span class="num">3</span><span>命名与更新</span></h2>
+        <div class="grid" style="margin-top:12px">
+            <div class="field">
+                <label for="prefix">名称前缀</label>
+                <input id="prefix" type="text" placeholder="例如 自用">
+            </div>
+            <div class="field">
+                <label for="interval">自动更新间隔（小时）</label>
+                <input id="interval" type="number" value="24" min="0" max="720">
+            </div>
+        </div>
+        <div class="chips">
+            <label><input type="checkbox" id="emoji" checked> <span>用国家码生成旗帜</span></label>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2><span class="num">4</span><span>输出格式</span></h2>
+
+        <div class="formats" style="margin-top:12px">
+            <label class="fmt"><input type="radio" name="fmt" value="clash" checked> Clash / Mihomo</label>
+            <label class="fmt"><input type="radio" name="fmt" value="singbox"> sing-box</label>
+            <label class="fmt"><input type="radio" name="fmt" value="shadowrocket"> Shadowrocket</label>
+            <label class="fmt"><input type="radio" name="fmt" value="v2ray"> v2rayN</label>
+        </div>
+
+        <button type="button" class="btn primary" id="run">转换</button>
+        <p class="status" id="status"></p>
+
+        <textarea id="out" readonly spellcheck="false" placeholder="结果会显示在这里"></textarea>
+
+        <div class="row">
+            <button type="button" class="btn" id="copy">复制</button>
+            <button type="button" class="btn" id="download">下载</button>
+            <button type="button" class="btn" id="clear">清空</button>
+        </div>
+
+        <p class="help">
+        如何导入到客户端中？
+        
+        复制上面的文本
+        -
+        新建一个.txt文件
+        -
+        把文本塞进去
+        -
+        再把文件塞进客户端中
+        -
+        或下载文件导入
+        
+        </p>
+    </section>
+
+    <footer>
+        <p><span>作者：</span><a href="https://github.com/Toushou-114514/" target="_blank" rel="noopener">Toushou</a></p>
+        <p><span>GitHub 仓库：</span><a href="https://github.com/Toushou-114514/IP-To-Subscription-File" target="_blank" rel="noopener">IP-To-Subscription-File</a></p>
+        <p id="boot" class="boot bad">JavaScript 没有运行 —— 转换不能工作</p>
+    </footer>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    /* ---------------- 文案 ---------------- */
+
+    var TEXT = {
+        "title": "IP转订阅文件",
+        "subtitle": "把 IP / 域名列表转换成 Clash、sing-box、Shadowrocket、v2rayN 可直接导入的配置",
+        "theme.auto": "跟随系统",
+        "theme.dark": "深色",
+        "theme.light": "浅色",
+
+        "sec1": "节点列表",
+        "sec1note": "每行一条，格式 IP 或域名#国家码 名称，端口可以写在地址里；全角符号会自动转成半角。",
+        "link.pick": "没有 IP？点击这里优选 IP",
+
+        "sec2": "节点参数",
+        "sec2note": "参数会套用到上面所有节点，也可以粘贴一条分享链接自动填入。",
+        "field.import": "从节点链接导入（可选）",
+        "ph.import": "vless:// vmess:// trojan:// ss:// hysteria2://",
+        "btn.import": "导入",
+        "field.type": "协议",
+        "field.port": "端口",
+        "field.uuid": "UUID",
+        "ph.uuid": "留空自动生成",
+        "field.password": "•••",
+        "ph.password": "•••",
+        "field.method": "加密方式",
+        "field.transport": "传输方式",
+        "chip.tls": "TLS",
+        "chip.insecure": "跳过证书验证",
+
+        "sec3": "命名与更新",
+        "field.prefix": "名称前缀",
+        "ph.prefix": "例如 自用",
+        "field.interval": "自动更新间隔（小时）",
+        "chip.emoji": "用国家码生成旗帜",
+
+        "sec4": "输出格式",
+        "btn.convert": "转换",
+        "btn.converting": "转换中…",
+        "btn.copy": "复制",
+        "btn.download": "下载",
+        "btn.clear": "清空",
+        "ph.out": "结果会显示在这里",
+        "help": "域名和 IP 都可以，写成 example.com#JP 日本 就能直接转。Shadowrocket 输出 Base64 订阅文本，v2rayN 输出明文分享链接。",
+
+        "footer.author": "作者：",
+        "footer.repo": "GitHub 仓库：",
+
+        "boot.ok": "JavaScript 正常 · 可以进行转换",
+        "boot.bad": "JavaScript 没有运行 —— 转换不可能工作",
+
+        "count": "{n} 条",
+        "countCc": "{n} 条带国家码",
+        "countBad": "{n} 条格式无效",
+
+        "status.working": "处理中…",
+        "status.geo": "查询国家码 {d}/{t}",
+        "status.generated": "已生成 {n} 个节点 · {fmt}",
+        "status.generatedWarn": "已生成 {n} 个节点；{extra}",
+        "status.autoUuid": "已自动生成 UUID",
+        "status.autoPass": "已自动生成密码",
+        "status.rememberOwn": "{msg}，记得换成你自己的",
+        "status.badSkipped": "{n} 条格式无效已跳过",
+        "status.noNodes": "没有识别到节点。示例：1.1.1.1#US 美国 或 example.com#JP 日本",
+        "status.failed": "转换失败：{msg}",
+        "status.copied": "已复制",
+        "status.nothingCopy": "还没有可复制的内容",
+        "status.downloaded": "已下载 {name}",
+        "status.nothingDownload": "还没有可下载的内容",
+        "status.cleared": "已清空",
+        "status.importEmpty": "请先粘贴节点链接",
+        "status.importSub": "这是订阅链接，不是节点链接。订阅地址无法拆成单个节点。",
+        "status.importBad": "无法识别这条链接。支持 vless / vmess / trojan / ss / hysteria2",
+        "status.importPartial": "链接已识别，但缺少服务器地址或内容被截断",
+        "status.imported": "已导入：{type} · {host}:{port}",
+        "status.scriptError": "脚本错误：{msg}（第 {line} 行）"
+    };
+
+    var THEME_KEY = "•••";
+    var themeMode = "auto";
+
+    function t(key, vars) {
+        var s = TEXT[key];
+        if (s === undefined) return key;
+        if (vars) {
+            for (var k in vars) {
+                if (Object.prototype.hasOwnProperty.call(vars, k)) {
+                    s = s.split("{" + k + "}").join(String(vars[k]));
+                }
+            }
+        }
+        return s;
+    }
+
+    window.onerror = function (msg, src, line) {
+        var el = document.getElementById("status");
+        if (el) {
+            el.className = "status err";
+            el.textContent = t("status.scriptError", { msg: msg, line: line });
+        }
+        return false;
+    };
+
+    function $(id) { return document.getElementById(id); }
+
+    function each(list, fn) {
+        for (var i = 0; i < list.length; i++) fn(list[i], i);
+    }
+
+    function sleep(ms) {
+        return new Promise(function (r) { setTimeout(r, ms); });
+    }
+
+    var ips         = $("ips");
+    var countEl     = $("count");
+    var typeSel     = $("type");
+    var portInp     = $("port");
+    var uuidInp     = $("uuid");
+    var passInp     = $("password");
+    var methodSel   = $("method");
+    var transSel    = $("transport");
+    var tlsChk      = $("tls");
+    var insecChk    = $("insecure");
+    var prefixInp   = $("prefix");
+    var intervalInp = $("interval");
+    var emojiChk    = $("emoji");
+    var outEl       = $("out");
+    var statusEl    = $("status");
+    var runBtn      = $("run");
+
+    var state = { format: "clash", current: null, busy: false };
+
+    /* ---------------- 工具 ---------------- */
+
+    function b64(str) {
+        var bytes = [];
+        var i;
+
+        if (window.TextEncoder) {
+            var enc = new TextEncoder().encode(str);
+            for (i = 0; i < enc.length; i++) bytes.push(enc[i]);
+        } else {
+            var utf8 = unescape(encodeURIComponent(str));
+            for (i = 0; i < utf8.length; i++) bytes.push(utf8.charCodeAt(i));
+        }
+
+        var bin = "";
+        for (i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+    }
+
+    function b64url(str) {
+        return b64(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+
+    function b64decode(s) {
+        s = String(s).replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, "");
+        while (s.length % 4) s += "=";
+
+        var bin = atob(s);
+        if (window.TextDecoder) {
+            var bytes = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            try { return new TextDecoder("utf-8").decode(bytes); } catch (e) {}
+        }
+        try { return decodeURIComponent(escape(bin)); } catch (e) { return bin; }
+    }
+
+    function cpToStr(cp) {
+        if (cp <= 0xFFFF) return String.fromCharCode(cp);
+        cp -= 0x10000;
+        return String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF));
+    }
+
+    function uuidv4() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        var b = new Uint8Array(16);
+        crypto.getRandomValues(b);
+        b[6] = (b[6] & 0x0f) | 0x40;
+        b[8] = (b[8] & 0x3f) | 0x80;
+        var h = "";
+        for (var i = 0; i < 16; i++) h += (b[i] + 256).toString(16).slice(1);
+        return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) +
+               "-" + h.slice(16, 20) + "-" + h.slice(20);
+    }
+
+    function randPass() {
+        var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var b = new Uint8Array(16);
+        crypto.getRandomValues(b);
+        var s = "";
+        for (var i = 0; i < 16; i++) s += chars[b[i] % chars.length];
+        return s;
+    }
+
+    function flagEmoji(cc) {
+        if (!cc || cc.length !== 2) return "";
+        var a = cc.toUpperCase().charCodeAt(0);
+        var b = cc.toUpperCase().charCodeAt(1);
+        if (a < 65 || a > 90 || b < 65 || b > 90) return "";
+        return cpToStr(0x1F1E6 + a - 65) + cpToStr(0x1F1E6 + b - 65);
+    }
+
+    function hostForUrl(h) {
+        return h.indexOf(":") >= 0 ? "[" + h + "]" : h;
+    }
+
+    function yq(s) {
+        return '"' + String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+    }
+
+    function setStatus(text, kind) {
+        statusEl.textContent = text || "";
+        statusEl.className = "status" + (kind ? " " + kind : "");
+    }
+
+    /* ---------------- 主题 ---------------- */
+
+    function systemDark() {
+        return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+
+    function updateThemeLabel() {
+        $("theme").textContent = t(
+            themeMode === "dark" ? "theme.dark" : (themeMode === "light" ? "theme.light" : "theme.auto")
+        );
+    }
+
+    function applyTheme(mode) {
+        themeMode = mode;
+        var dark = mode === "dark" || (mode === "auto" && systemDark());
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        updateThemeLabel();
+        try { localStorage.setItem(THEME_KEY, mode); } catch (e) {}
+    }
+
+    function initTheme() {
+        var mode = "auto";
+        try { mode = localStorage.getItem(THEME_KEY) || "auto"; } catch (e) {}
+        if (["auto", "dark", "light"].indexOf(mode) < 0) mode = "auto";
+        applyTheme(mode);
+
+        $("theme").addEventListener("click", function () {
+            var next = themeMode === "auto" ? "dark" : (themeMode === "dark" ? "light" : "auto");
+            applyTheme(next);
+        });
+
+        if (window.matchMedia) {
+            var mq = window.matchMedia("(prefers-color-scheme: dark)");
+            var onChange = function () { if (themeMode === "auto") applyTheme("auto"); };
+            if (mq.addEventListener) mq.addEventListener("change", onChange);
+            else if (mq.addListener) mq.addListener(onChange);
+        }
+    }
+
+    /* ---------------- 输入规范化与校验 ---------------- */
+
+    function normalizeLine(s) {
+        if (typeof s.normalize === "function") {
+            try { s = s.normalize("NFKC"); } catch (e) {}
+        }
+        return s
+            .replace(/[\u200B\u200C\u200D\uFEFF]/g, "")
+            .replace(/\u00A0/g, " ")
+            .replace(/\u3000/g, " ")
+            .trim();
+    }
+
+    function isIPv4(h) {
+        if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(h)) return false;
+        var parts = h.split(".");
+        for (var i = 0; i < 4; i++) {
+            var n = Number(parts[i]);
+            if (!(n >= 0 && n <= 255)) return false;
+        }
+        return true;
+    }
+
+    function isIPv6(h) {
+        if (h.indexOf(":") < 0) return false;
+        return /^[0-9a-fA-F:.]+$/.test(h) && h !== ":";
+    }
+
+    function isIpLiteral(h) {
+        return isIPv4(h) || isIPv6(h);
+    }
+
+    function isDomain(h) {
+        var host = h;
+        if (host.charAt(host.length - 1) === ".") host = host.slice(0, -1);
+        if (!host || host.length > 253) return false;
+
+        var labels = host.split(".");
+        if (labels.length < 2) return false;
+
+        for (var i = 0; i < labels.length; i++) {
+            var L = labels[i];
+            if (!L || L.length > 63) return false;
+            if (!/^[A-Za-z0-9_\u00a1-\uffff-]+$/.test(L)) return false;
+            if (L.charAt(0) === "-" || L.charAt(L.length - 1) === "-") return false;
+        }
+        return true;
+    }
+
+    function isValidHost(h) {
+        return isIPv4(h) || isIPv6(h) || isDomain(h);
+    }
+
+    function parseLine(raw) {
+        var s = normalizeLine(raw);
+        if (!s) return null;
+        if (s.indexOf("//") >= 0) return null;
+        if (s.charAt(0) === "#") return null;
+
+        var cc = "";
+        var name = "";
+
+        var hash = s.indexOf("#");
+        if (hash >= 0) {
+            var tail = s.slice(hash + 1).trim();
+            s = s.slice(0, hash).trim();
+
+            if (tail) {
+                var parts = tail.split(/\s+/);
+                if (/^[A-Za-z]{2}$/.test(parts[0])) {
+                    cc = parts[0].toUpperCase();
+                    name = parts.slice(1).join(" ");
+                } else {
+                    name = tail;
+                }
+            }
+        }
+        if (!s) return null;
+
+        var host = s;
+        var port = null;
+
+        var m6 = s.match(/^\[([0-9a-fA-F:.]+)\](?::(\d{1,5}))?$/);
+        if (m6) {
+            host = m6[1];
+            port = m6[2] ? Number(m6[2]) : null;
+        } else {
+            var m4 = s.match(/^([^\s\[\]]+)\s*:\s*(\d{1,5})$/);
+            if (m4 && m4[1].indexOf(":") < 0) {
+                host = m4[1];
+                port = Number(m4[2]);
+            }
+        }
+
+        host = host.trim();
+        if (!host) return null;
+
+        return { ip: host, port: port, cc: cc, name: name, valid: isValidHost(host) };
+    }
+
+    function parseAll() {
+        var nodes = [];
+        var bad = 0;
+        var withCc = 0;
+        var lines = ips.value.split(/\r?\n/);
+
+        for (var i = 0; i < lines.length; i++) {
+            var n = parseLine(lines[i]);
+            if (!n) continue;
+            if (!n.valid) { bad++; continue; }
+            if (n.cc) withCc++;
+            nodes.push(n);
+        }
+
+        return { nodes: nodes, bad: bad, withCc: withCc };
+    }
+
+    function refreshCount() {
+        var r = parseAll();
+        var parts = [t("count", { n: r.nodes.length })];
+        if (r.withCc) parts.push(t("countCc", { n: r.withCc }));
+        if (r.bad) parts.push(t("countBad", { n: r.bad }));
+        countEl.textContent = parts.join(" · ");
+    }
+
+    /* ---------------- 国家查询 ---------------- */
+
+    var GEO_KEY = "•••";
+    var GEO_TTL = 30 * 24 * 3600 * 1000;
+
+    function loadGeo() {
+        try {
+            var raw = localStorage.getItem(GEO_KEY);
+            if (!raw) return {};
+            var obj = JSON.parse(raw);
+            var now = Date.now();
+            var out = {};
+            for (var k in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, k) &&
+                    obj[k] && now - obj[k].t < GEO_TTL) {
+                    out[k] = obj[k].c;
+                }
+            }
+            return out;
+        } catch (e) { return {}; }
+    }
+
+    function saveGeo(map) {
+        try {
+            var now = Date.now();
+            var obj = {};
+            for (var k in map) {
+                if (Object.prototype.hasOwnProperty.call(map, k)) {
+                    obj[k] = { c: map[k], t: now };
+                }
+            }
+            localStorage.setItem(GEO_KEY, JSON.stringify(obj));
+        } catch (e) {}
+    }
+
+    function fetchJson(url, ms) {
+        return new Promise(function (resolve, reject) {
+            var settled = false;
+            var timer = setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                reject(new Error("timeout"));
+            }, ms || 4000);
+
+            fetch(url, { cache: "no-store" }).then(function (r) {
+                return r.ok ? r.json() : null;
+            }).then(function (d) {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(d);
+            }).catch(function (e) {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                reject(e);
+            });
+        });
+    }
+
+    function lookupCountry(ip) {
+        if (isDomain(ip)) return Promise.resolve("");
+
+        return fetchJson("https://ipwho.is/" + encodeURIComponent(ip), 4000)
+            .then(function (d) {
+                if (d && d.success !== false && d.country_code) return d.country_code;
+                throw new Error("miss");
+            })
+            .catch(function () {
+                return fetchJson("https://api.country.is/" + encodeURIComponent(ip), 4000)
+                    .then(function (d) { return (d && d.country) ? d.country : ""; })
+                    .catch(function () { return ""; });
+            });
+    }
+
+    function detectCountries(nodes, onProgress) {
+        var cache = loadGeo();
+        var seen = {};
+        var uniq = [];
+
+        for (var i = 0; i < nodes.length; i++) {
+            if (!seen[nodes[i].ip]) {
+                seen[nodes[i].ip] = 1;
+                uniq.push(nodes[i].ip);
+            }
+        }
+
+        var todo = [];
+        for (var j = 0; j < uniq.length; j++) {
+            if (!cache[uniq[j]]) todo.push(uniq[j]);
+        }
+        if (!todo.length) return Promise.resolve(cache);
+
+        var done = 0;
+        var idx = 0;
+        var limit = Math.min(3, todo.length);
+
+        function next() {
+            if (idx >= todo.length) return Promise.resolve();
+
+            var ip = todo[idx++];
+
+            return lookupCountry(ip).then(function (cc) {
+                cache[ip] = cc || "";
+            }, function () {
+                cache[ip] = "";
+            }).then(function () {
+                done++;
+                onProgress(done, todo.length);
+                return sleep(100);
+            }).then(next);
+        }
+
+        var workers = [];
+        for (var k = 0; k < limit; k++) workers.push(next());
+
+        return Promise.all(workers).then(function () {
+            saveGeo(cache);
+            return cache;
+        });
+    }
+
+    /* ---------------- 参数 ---------------- */
+
+    function readOptions() {
+        return {
+            type: typeSel.value,
+            port: Number(portInp.value) || 443,
+            uuid: uuidInp.value.trim(),
+            password: •••,
+            method: methodSel.value,
+            transport: transSel.value === "tcp" ? "tcp" : "ws",
+            tls: tlsChk.checked,
+            insecure: insecChk.checked,
+            prefix: prefixInp.value.trim(),
+            interval: Number(intervalInp.value) || 0,
+            emoji: emojiChk.checked
+        };
+    }
+
+    function ensureCredentials(o) {
+        var msg = "";
+        if ((o.type === "vless" || o.type === "vmess") && !o.uuid) {
+            o.uuid = uuidv4();
+            uuidInp.value = o.uuid;
+            msg = "status.autoUuid";
+        }
+        if ((o.type === "trojan" || o.type === "ss" || o.type === "hysteria2") && !o.password) {
+            o.password = •••;
+            passInp.value = o.password;
+            msg = "status.autoPass";
+        }
+        return msg;
+    }
+
+    function buildNames(nodes, o) {
+        var used = {};
+        var out = [];
+
+        for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            var base = (n.name || n.ip).replace(/\s+/g, " ").trim();
+            if (o.prefix) base = o.prefix + " " + base;
+            if (o.emoji && n.cc) base = flagEmoji(n.cc) + " " + base;
+
+            var name = base;
+            var k = 2;
+            while (used[name]) { name = base + " " + k; k++; }
+            used[name] = 1;
+            out.push(name);
+        }
+
+        return out;
+    }
+
+    /* ---------------- Clash ---------------- */
+
+    function clashTransport(L, o) {
+        if (o.transport === "tcp") {
+            L.push("    network: tcp");
+            return;
+        }
+        L.push("    network: ws");
+        L.push("    ws-opts:");
+        L.push("      path: " + yq("/"));
+    }
+
+    function clashProxy(n, name, o) {
+        var port = n.port || o.port;
+        var sni = n.ip;
+        var L = [];
+
+        L.push("  - name: " + yq(name));
+        L.push("    type: " + o.type);
+        L.push("    server: " + yq(n.ip));
+        L.push("    port: " + port);
+
+        if (o.type === "vless") {
+            L.push("    uuid: " + yq(o.uuid));
+            L.push("    udp: true");
+            L.push("    tls: " + (o.tls ? "true" : "false"));
+            if (o.tls) {
+                L.push("    servername: " + yq(sni));
+                L.push("    client-fingerprint: chrome");
+            }
+            clashTransport(L, o);
+        } else if (o.type === "vmess") {
+            L.push("    uuid: " + yq(o.uuid));
+            L.push("    alterId: 0");
+            L.push("    cipher: auto");
+            L.push("    udp: true");
+            L.push("    tls: " + (o.tls ? "true" : "false"));
+            if (o.tls) {
+                L.push("    servername: " + yq(sni));
+                L.push("    client-fingerprint: chrome");
+            }
+            clashTransport(L, o);
+        } else if (o.type === "trojan") {
+            L.push("    password: "•••"    udp: true");
+            L.push("    sni: " + yq(sni));
+            L.push("    skip-cert-verify: " + (o.insecure ? "true" : "false"));
+            clashTransport(L, o);
+        } else if (o.type === "ss") {
+            L.push("    cipher: " + o.method);
+            L.push("    password: "•••"    udp: true");
+        } else {
+            L.push("    password: "•••"    sni: " + yq(sni));
+            L.push("    skip-cert-verify: " + (o.insecure ? "true" : "false"));
+        }
+
+        return L.join("\n");
+    }
+
+    function genClash(nodes, names, o) {
+        var proxies = [];
+        for (var i = 0; i < nodes.length; i++) {
+            proxies.push(clashProxy(nodes[i], names[i], o));
+        }
+
+        var items = [];
+        for (var j = 0; j < names.length; j++) {
+            items.push("      - " + yq(names[j]));
+        }
+        var itemsText = items.join("\n");
+
+        var head =
+            "# Clash / Mihomo\n" +
+            "# 节点数：" + nodes.length + "\n" +
+            "# 生成时间：" + new Date().toLocaleString() + "\n" +
+            (o.interval ? "# profile-update-interval: " + o.interval + "\n" : "") +
+            "\n";
+
+        return head +
+            "mixed-port: 7890\n" +
+            "allow-lan: false\n" +
+            "mode: rule\n" +
+            "log-level: info\n" +
+            "proxies:\n" + proxies.join("\n") + "\n" +
+            "proxy-groups:\n" +
+            "  - name: \"节点选择\"\n" +
+            "    type: select\n" +
+            "    proxies:\n" +
+            "      - \"自动选择\"\n" +
+            "      - \"DIRECT\"\n" +
+            itemsText + "\n" +
+            "  - name: \"自动选择\"\n" +
+            "    type: url-test\n" +
+            "    url: \"http://www.gstatic.com/generate_204\"\n" +
+            "    interval: 300\n" +
+            "    tolerance: 50\n" +
+            "    proxies:\n" +
+            itemsText + "\n" +
+            "rules:\n" +
+            "  - GEOIP,CN,DIRECT\n" +
+            "  - MATCH,节点选择\n";
+    }
+
+    /* ---------------- sing-box ---------------- */
+
+    function sbTransport(o) {
+        if (o.type === "ss" || o.type === "hysteria2") return null;
+        if (o.transport === "tcp") return null;
+        return { type: "ws", path: "/" };
+    }
+
+    function sbOutbound(n, tag, o) {
+        var port = n.port || o.port;
+        var sni = n.ip;
+        var ob, t;
+
+        if (o.type === "vless") {
+            ob = {
+                type: "vless", tag: tag, server: n.ip, server_port: port,
+                uuid: o.uuid, packet_encoding: "xudp"
+            };
+            if (o.tls) {
+                ob.tls = {
+                    enabled: true, server_name: sni,
+                    utls: { enabled: true, fingerprint: "chrome" }
+                };
+            }
+            t = sbTransport(o);
+            if (t) ob.transport = t;
+            return ob;
+        }
+
+        if (o.type === "vmess") {
+            ob = {
+                type: "vmess", tag: tag, server: n.ip, server_port: port,
+                uuid: o.uuid, security: "auto", alter_id: 0
+            };
+            if (o.tls) {
+                ob.tls = {
+                    enabled: true, server_name: sni,
+                    utls: { enabled: true, fingerprint: "chrome" }
+                };
+            }
+            t = sbTransport(o);
+            if (t) ob.transport = t;
+            return ob;
+        }
+
+        if (o.type === "trojan") {
+            ob = {
+                type: "trojan", tag: tag, server: n.ip, server_port: port,
+                password: •••,
+                tls: {
+                    enabled: true, server_name: sni, insecure: !!o.insecure,
+                    utls: { enabled: true, fingerprint: "chrome" }
+                }
+            };
+            t = sbTransport(o);
+            if (t) ob.transport = t;
+            return ob;
+        }
+
+        if (o.type === "ss") {
+            return {
+                type: "shadowsocks", tag: tag, server: n.ip, server_port: port,
+                method: o.method, password: •••
+            };
+        }
+
+        return {
+            type: "hysteria2", tag: tag, server: n.ip, server_port: port,
+            password: •••,
+            tls: { enabled: true, server_name: sni, insecure: !!o.insecure }
+        };
+    }
+
+    function genSingbox(nodes, names, o) {
+        var list = [];
+        for (var i = 0; i < nodes.length; i++) {
+            list.push(sbOutbound(nodes[i], names[i], o));
+        }
+
+        var sel = names.slice();
+        sel.push("自动选择");
+        sel.push("direct");
+
+        var cfg = {
+            log: { level: "info", timestamp: true },
+            inbounds: [
+                {
+                    type: "tun", tag: "tun-in",
+                    address: ["172.19.0.1/30", "fdfe:dcba:9876::1/126"],
+                    auto_route: true, strict_route: true, stack: "mixed"
+                },
+                { type: "mixed", tag: "mixed-in", listen: "127.0.0.1", listen_port: 2080 }
+            ],
+            outbounds: [
+                {
+                    type: "selector", tag: "节点选择",
+                    outbounds: sel,
+                    "default": names[0] || "direct"
+                },
+                {
+                    type: "urltest", tag: "自动选择",
+                    outbounds: names.slice(),
+                    url: "https://www.gstatic.com/generate_204",
+                    interval: "5m", tolerance: 50
+                }
+            ].concat(list).concat([{ type: "direct", tag: "direct" }]),
+            route: { rules: [], "final": "节点选择", auto_detect_interface: true }
+        };
+
+        return JSON.stringify(cfg, null, 2);
+    }
+
+    /* ---------------- 分享链接 ---------------- */
+
+    function linkFor(n, name, o) {
+        var port = n.port || o.port;
+        var host = hostForUrl(n.ip);
+        var frag = encodeURIComponent(name);
+        var domain = !isIpLiteral(n.ip);
+        var p;
+
+        if (o.type === "vless") {
+            p = new URLSearchParams();
+            p.set("encryption", "none");
+            p.set("security", o.tls ? "tls" : "none");
+            if (o.tls) {
+                p.set("sni", n.ip);
+                p.set("fp", "chrome");
+            }
+            p.set("type", o.transport);
+            if (o.transport === "ws") {
+                if (domain) p.set("host", n.ip);
+                p.set("path", "/");
+            }
+            return "vless://" + o.uuid + "@" + host + ":" + port + "?" +
+                   p.toString() + "#" + frag;
+        }
+
+        if (o.type === "vmess") {
+            var obj = {
+                v: "2", ps: name, add: n.ip, port: String(port),
+                id: o.uuid, aid: "0", scy: "auto",
+                net: o.transport, type: "none",
+                host: domain ? n.ip : "",
+                path: o.transport === "ws" ? "/" : "",
+                tls: o.tls ? "tls" : "",
+                sni: o.tls ? n.ip : ""
+            };
+            return "vmess://" + b64(JSON.stringify(obj));
+        }
+
+        if (o.type === "trojan") {
+            p = new URLSearchParams();
+            p.set("security", "tls");
+            p.set("sni", n.ip);
+            p.set("fp", "chrome");
+            p.set("type", o.transport);
+            if (o.transport === "ws") {
+                if (domain) p.set("host", n.ip);
+                p.set("path", "/");
+            }
+            if (o.insecure) p.set("allowInsecure", "1");
+            return "trojan://" + encodeURIComponent(o.password) + "@" + host + ":" +
+                   port + "?" + p.toString() + "#" + frag;
+        }
+
+        if (o.type === "ss") {
+            return "ss://" + b64url(o.method + ":" + o.password) + "@" + host + ":" +
+                   port + "#" + frag;
+        }
+
+        p = new URLSearchParams();
+        p.set("sni", n.ip);
+        p.set("insecure", o.insecure ? "1" : "0");
+        return "hysteria2://" + encodeURIComponent(o.password) + "@" + host + ":" +
+               port + "/?" + p.toString() + "#" + frag;
+    }
+
+    /* ---------------- 渲染 ---------------- */
+
+    function fileName() {
+        var map = {
+            clash: "config.yaml",
+            singbox: "config.json",
+            shadowrocket: "shadowrocket-sub.txt",
+            v2ray: "v2rayn-sub.txt"
+        };
+        return map[state.format];
+    }
+
+    function fmtLabel() {
+        var map = {
+            clash: "Clash / Mihomo",
+            singbox: "sing-box",
+            shadowrocket: "Shadowrocket",
+            v2ray: "v2rayN"
+        };
+        return map[state.format];
+    }
+
+    function render() {
+        if (!state.current) return;
+
+        var nodes = state.current.nodes;
+        var names = state.current.names;
+        var o = state.current.options;
+        var text;
+
+        if (state.format === "clash") {
+            text = genClash(nodes, names, o);
+        } else if (state.format === "singbox") {
+            text = genSingbox(nodes, names, o);
+        } else {
+            var links = [];
+            for (var i = 0; i < nodes.length; i++) {
+                links.push(linkFor(nodes[i], names[i], o));
+            }
+            text = state.format === "shadowrocket" ? b64(links.join("\n")) : links.join("\n");
+        }
+
+        outEl.value = text;
+        setStatus(t("status.generated", { n: nodes.length, fmt: fmtLabel() }), "ok");
+    }
+
+    /* ---------------- 主流程 ---------------- */
+
+    function finish() {
+        state.busy = false;
+        runBtn.disabled = false;
+        runBtn.textContent = t("btn.convert");
+    }
+
+    function run(silent) {
+        if (state.busy) return;
+
+        var parsed = parseAll();
+        if (!parsed.nodes.length) {
+            setStatus(t("status.noNodes"), "err");
+            if (!silent) ips.focus();
+            return;
+        }
+
+        var o = readOptions();
+        var autoKey = ensureCredentials(o);
+        var nodes = parsed.nodes;
+        var missing = [];
+        var i;
+
+        for (i = 0; i < nodes.length; i++) {
+            if (!nodes[i].cc) missing.push(nodes[i]);
+        }
+
+        state.busy = true;
+        runBtn.disabled = true;
+        runBtn.textContent = t("btn.converting");
+        setStatus(autoKey ? t(autoKey) : t("status.working"), autoKey ? "warn" : "");
+
+        var chain = Promise.resolve();
+
+        if (o.emoji && missing.length) {
+            chain = chain.then(function () {
+                setStatus(t("status.geo", { d: 0, t: missing.length }));
+                return detectCountries(missing, function (d, tt) {
+                    setStatus(t("status.geo", { d: d, t: tt }));
+                });
+            }).then(function (geo) {
+                for (var j = 0; j < missing.length; j++) {
+                    missing[j].cc = geo[missing[j].ip] || "";
+                }
+            });
+        }
+
+        chain.then(function () {
+            state.current = { nodes: nodes, names: buildNames(nodes, o), options: o };
+            render();
+
+            if (!silent) {
+                try { outEl.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
+            }
+
+            var extra = [];
+            if (parsed.bad) extra.push(t("status.badSkipped", { n: parsed.bad }));
+            if (autoKey) extra.push(t("status.rememberOwn", { msg: t(autoKey) }));
+
+            if (extra.length) {
+                setStatus(t("status.generatedWarn", { n: nodes.length, extra: extra.join("; ") }), "warn");
+            }
+        }).catch(function (e) {
+            setStatus(t("status.failed", { msg: e && e.message ? e.message : String(e) }), "err");
+        }).then(finish, finish);
+    }
+
+    /* ---------------- 链接导入 ---------------- */
+
+    function parseNodeLink(raw) {
+        var s = normalizeLine(raw);
+        if (!s) return null;
+
+        if (/^https?:\/\//i.test(s)) return { error: "sub" };
+
+        var m = s.match(/^([a-zA-Z0-9]+):\/\//);
+        if (!m) return null;
+
+        var scheme = m[1].toLowerCase();
+        if (scheme === "hy2") scheme = "hysteria2";
+
+        if (scheme === "vmess") {
+            var json;
+            try {
+                json = JSON.parse(b64decode(s.slice(8)));
+            } catch (e) {
+                return { error: "truncated" };
+            }
+            if (!json || !json.add) return { error: "truncated" };
+
+            var net = String(json.net || "tcp").toLowerCase();
+            return {
+                type: "vmess",
+                server: String(json.add),
+                port: Number(json.port) || 443,
+                uuid: json.id || "",
+                transport: net === "ws" ? "ws" : "tcp",
+                tls: String(json.tls || "").toLowerCase() === "tls",
+                name: json.ps || ""
+            };
+        }
+
+        if (scheme === "ss") {
+            var body = s.slice(5);
+            var frag = "";
+            var h = body.indexOf("#");
+            if (h >= 0) {
+                frag = body.slice(h + 1);
+                body = body.slice(0, h);
+            }
+            body = body.split("?")[0];
+
+            var at = body.lastIndexOf("@");
+            var info, hostport;
+
+            if (at >= 0) {
+                info = body.slice(0, at);
+                hostport = body.slice(at + 1);
+            } else {
+                var dec = "";
+                try { dec = b64decode(body); } catch (e) { return null; }
+                var a2 = dec.lastIndexOf("@");
+                if (a2 < 0) return null;
+                info = dec.slice(0, a2);
+                hostport = dec.slice(a2 + 1);
+            }
+
+            var cred = info;
+            if (cred.indexOf(":") < 0) {
+                try { cred = b64decode(info); } catch (e) {}
+            }
+            var ci = cred.indexOf(":");
+            if (ci < 0) return null;
+
+            var hpParts = hostport.split(":");
+            var sPort = Number(hpParts.pop()) || 443;
+            var sHost = hpParts.join(":").replace(/^\[|\]$/g, "");
+
+            return {
+                type: "ss",
+                server: sHost,
+                port: sPort,
+                method: cred.slice(0, ci),
+                password: ••• + 1),
+                transport: "tcp",
+                name: frag ? decodeURIComponent(frag) : ""
+            };
+        }
+
+        var u;
+        try { u = new URL(s); } catch (e) { return null; }
+
+        if (["vless", "trojan", "hysteria2"].indexOf(scheme) < 0) return null;
+
+        var q = u.searchParams;
+        var trans = (q.get("type") || "tcp").toLowerCase();
+        var out = {
+            type: scheme,
+            server: u.hostname.replace(/^\[|\]$/g, ""),
+            port: Number(u.port) || 443,
+            transport: trans === "ws" ? "ws" : "tcp",
+            tls: (q.get("security") || "").toLowerCase() === "tls",
+            name: u.hash ? decodeURIComponent(u.hash.slice(1)) : ""
+        };
+
+        if (scheme === "hysteria2") out.tls = true;
+
+        if (scheme === "vless") {
+            out.uuid = decodeURIComponent(u.username || "");
+        } else {
+            out.password = ••• || u.username || "");
+        }
+
+        return out;
+    }
+
+    function addServerLine(server, port, cc, name) {
+        if (!server) return false;
+        if (ips.value.indexOf(server) >= 0) return false;
+
+        var addr = server.indexOf(":") >= 0 ? "[" + server + "]:" + port : server + ":" + port;
+        var line = addr;
+        if (cc) line += "#" + cc.toUpperCase();
+        if (name) line += (cc ? " " : "# ") + name;
+
+        ips.value = ips.value ? ips.value.replace(/\s*$/, "") + "\n" + line : line;
+        refreshCount();
+        return true;
+    }
+
+    function applyParsed(p) {
+        if (!p || p.error) return false;
+        if (["vless", "vmess", "trojan", "ss", "hysteria2"].indexOf(p.type) < 0) return false;
+
+        typeSel.value = p.type;
+        if (p.port) portInp.value = p.port;
+        if (p.uuid) uuidInp.value = p.uuid;
+        if (p.password) passInp.value = p.password;
+        if (p.method) methodSel.value = p.method;
+        if (p.transport) transSel.value = p.transport;
+        if (typeof p.tls === "boolean") tlsChk.checked = p.tls;
+
+        var cc = "";
+        var display = p.name || "";
+        if (display) {
+            var mm = display.match(/^([A-Za-z]{2})\s+(.+)$/);
+            if (mm) {
+                cc = mm[1];
+                display = mm[2];
+            }
+        }
+
+        syncFields();
+        return addServerLine(p.server, p.port || 443, cc, display);
+    }
+
+    /* ---------------- 字段联动 ---------------- */
+
+    function syncFields() {
+        var tp = typeSel.value;
+        var els = document.querySelectorAll("[data-for]");
+
+        each(els, function (el) {
+            var ok = el.getAttribute("data-for").split(/\s+/).indexOf(tp) >= 0;
+            el.hidden = !ok;
+        });
+    }
+
+    function markFormat() {
+        var labels = document.querySelectorAll(".fmt");
+        each(labels, function (label) {
+            var input = label.querySelector("input");
+            if (input && input.checked) label.classList.add("active");
+            else label.classList.remove("active");
+        });
+    }
+
+    /* ---------------- 事件 ---------------- */
+
+    initTheme();
+
+    var autoTimer = null;
+
+    function scheduleRun() {
+        clearTimeout(autoTimer);
+        autoTimer = setTimeout(function () {
+            var r = parseAll();
+            if (!r.nodes.length) return;
+            run(true);
+        }, 500);
+    }
+
+    ips.addEventListener("input", function () {
+        refreshCount();
+        scheduleRun();
+    });
+
+    typeSel.addEventListener("change", function () {
+        syncFields();
+        scheduleRun();
+    });
+
+    runBtn.addEventListener("click", function () { run(false); });
+
+    each([portInp, uuidInp, passInp, methodSel, transSel, tlsChk, insecChk, prefixInp, intervalInp, emojiChk],
+        function (el) {
+            el.addEventListener("change", scheduleRun);
+            el.addEventListener("input", scheduleRun);
+        });
+
+    each(document.querySelectorAll('input[name="fmt"]'), function (radio) {
+        radio.addEventListener("change", function () {
+            if (!this.checked) return;
+            state.format = this.value;
+            markFormat();
+            if (state.current) render();
+        });
+    });
+
+    $("importBtn").addEventListener("click", function () {
+        var raw = $("import").value;
+        if (!raw.trim()) {
+            setStatus(t("status.importEmpty"), "warn");
+            return;
+        }
+
+        var p = parseNodeLink(raw);
+
+        if (p && p.error === "sub") {
+            setStatus(t("status.importSub"), "err");
+            return;
+        }
+        if (!p) {
+            setStatus(t("status.importBad"), "err");
+            return;
+        }
+        if (!applyParsed(p)) {
+            setStatus(t("status.importPartial"), "err");
+            return;
+        }
+
+        setStatus(t("status.imported", {
+            type: p.type.toUpperCase(),
+            host: p.server,
+            port: p.port || 443
+        }), "ok");
+    });
+
+    $("copy").addEventListener("click", function () {
+        if (!outEl.value) {
+            setStatus(t("status.nothingCopy"), "warn");
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(outEl.value).then(function () {
+                setStatus(t("status.copied"), "ok");
+            }, function () {
+                outEl.select();
+                document.execCommand("copy");
+                setStatus(t("status.copied"), "ok");
+            });
+        } else {
+            outEl.select();
+            document.execCommand("copy");
+            setStatus(t("status.copied"), "ok");
+        }
+    });
+
+    $("download").addEventListener("click", function () {
+        if (!outEl.value) {
+            setStatus(t("status.nothingDownload"), "warn");
+            return;
+        }
+        var blob = new Blob([outEl.value], { type: "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = fileName();
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        setStatus(t("status.downloaded", { name: fileName() }), "ok");
+    });
+
+    $("clear").addEventListener("click", function () {
+        outEl.value = "";
+        state.current = null;
+        setStatus(t("status.cleared"));
+    });
+
+    /* ---------------- 初始化 ---------------- */
+
+    var bootEl = $("boot");
+    if (bootEl) {
+        bootEl.setAttribute("data-js", "ok");
+        bootEl.className = "boot ok";
+        bootEl.textContent = t("boot.ok");
+    }
+
+    syncFields();
+    markFormat();
+    refreshCount();
+})();
+</script>
+</body>
+</html>
