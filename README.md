@@ -6,7 +6,7 @@
 
 ---
 
-在线运行 [网页](https://www.toushou.top/vpn/c)
+在线运行 [打开网页](https://toushou-114514.github.io/IP-To-Subscription-File/)
 
 ---
 ## 功能
@@ -185,3 +185,4 @@ cdn.7zz.cn:443#JP 日本优选
 
 - 作者：Toushou — <https://github.com/Toushou-114514/>
 - 仓库：<https://github.com/Toushou-114514/IP-To-Subscription-File>
+- 如果觉得做的不错就给仓库点个star⭐吧
