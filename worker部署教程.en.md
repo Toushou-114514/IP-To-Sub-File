@@ -1,8 +1,8 @@
-# worker.js deployment guide (Cloudflare)
+# Worker deployment guide (Cloudflare)
 
-This is the standalone version of chapter 13 in [README.en.md](README.en.md). It only covers deploying the bundled `worker.js` and getting the disguise domain and UUID.
+This is the standalone version of chapter 13 in [Full guide](完整使用教程.en.md). It only covers deploying the bundled `worker.js` and getting the disguise domain and UUID.
 
-> Server side only. For the tool itself, node formats and troubleshooting, see [README.en.md](README.en.md).
+> Server side only. For the tool itself, node formats and troubleshooting, see the [full guide](完整使用教程.en.md).
 
 This guide ships with a minimal Worker (`worker.js` in the repository root). After deploying, open the domain and the page shows just two values: the disguise domain and the UUID. Copy them into this tool and you are done. No edgetunnel required — about 300 lines, VLESS over WebSocket only.
 
@@ -120,4 +120,4 @@ The only real difference: you have to dig the values out instead of copying them
 
 ---
 
-> Server side only. For the tool itself, node formats and troubleshooting, see [README.en.md](README.en.md).
+> Server side only. For the tool itself, node formats and troubleshooting, see the [full guide](完整使用教程.en.md).

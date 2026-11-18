@@ -1,8 +1,8 @@
-# worker.js 部署教程（Cloudflare）
+# worker 部署教程（Cloudflare）
 
-本文是 [README.zh.md](README.zh.md) 第 13 章的独立版，只讲怎么部署自带的 `worker.js`，然后拿到「伪装域名」和「UUID」。
+本文是 [完整使用教程](完整使用教程.zh.md) 第 13 章的独立版，只讲怎么部署自带的 `worker.js`，然后拿到「伪装域名」和「UUID」。
 
-> 本文只讲服务端。工具本身的用法、节点格式、报错排查见 [README.zh.md](README.zh.md)。
+> 本文只讲服务端。工具本身的用法、节点格式、报错排查见 [完整使用教程](完整使用教程.zh.md)。
 
 本教程附带一个极简 Worker（仓库根目录的 `worker.js`）：部署后打开域名，页面只显示「伪装域名」和「UUID」两个值，复制进本工具就能用。不依赖 edgetunnel，约 300 行，只实现 VLESS over WebSocket。
 
@@ -120,4 +120,4 @@ UUID      3f2a1b4c-8d5e-4f6a-9b7c-...     [复制]
 
 ---
 
-> 本文只讲服务端。工具本身的用法、节点格式、报错排查见 [README.zh.md](README.zh.md)。
+> 本文只讲服务端。工具本身的用法、节点格式、报错排查见 [完整使用教程](完整使用教程.zh.md)。
