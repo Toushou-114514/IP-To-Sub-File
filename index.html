@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>IP转订阅文件</title>
+<title>IP to Sub File</title>
 <script>
 (function () {
     try {
@@ -73,6 +73,7 @@
 
     .topbar {
         display: flex;
+        flex-wrap: wrap;
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
@@ -82,7 +83,13 @@
     h1 { margin: 0 0 4px; font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
     .sub { margin: 0; max-width: 48ch; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 
-    .top-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+    .top-actions { display: flex; gap: 8px; flex: 0 0 auto; align-items: center; }
+    .lang-select {
+        width: auto;
+        padding: 6px 8px;
+        font-size: 12.5px;
+        border-radius: 8px;
+    }
 
     .card {
         padding: 16px;
@@ -247,7 +254,13 @@
 
     .chips input { margin: 0; accent-color: var(--accent); }
 
-    .help { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+    .help {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.7;
+        white-space: pre-line;
+    }
 
     .guide {
         margin: 4px 0 16px;
@@ -359,24 +372,29 @@
 <div class="page">
     <header class="topbar">
         <div>
-            <h1>IP转订阅文件 IP To Subscription File</h1>
-            <p class="sub">把 IP / 域名列表转换成 Clash、sing-box、Shadowrocket、v2rayN 可直接导入的配置</p>
+            <h1>IP to Sub File</h1>
+            <p class="sub" data-i18n="subtitle">IP 转订阅文件 · 把 IP / 域名列表转换成 Clash、sing-box、Shadowrocket、v2rayN 可直接导入的配置</p>
         </div>
         <div class="top-actions">
+            <select id="lang" class="lang-select" aria-label="Language">
+                <option value="zh">简体中文</option>
+                <option value="tw">繁體中文</option>
+                <option value="en">English</option>
+            </select>
             <button type="button" class="btn small" id="theme">跟随系统</button>
         </div>
     </header>
 
     <noscript>
-        <div class="noscript-box">
+        <div class="noscript-box" data-i18n="noscript">
             当前环境没有运行 JavaScript，转换无法工作。请用 Chrome、Edge 等浏览器直接打开本文件。
         </div>
     </noscript>
 
     <section class="card">
-        <h2><span class="num">1</span><span>节点列表</span></h2>
-        <p class="note">每行一条，格式 IP 或域名#国家码 名称，端口可以写在地址里。可以前往BestCF上优选IP</p>
-        <textarea id="ips" class="mono" spellcheck="false"
+        <h2><span class="num">1</span><span data-i18n="sec1">节点列表</span></h2>
+        <p class="note" data-i18n="sec1note">每行一条，格式 IP 或域名#国家码 名称，端口可以写在地址里。可以前往BestCF上优选IP</p>
+        <textarea id="ips" class="mono" spellcheck="false" data-i18n-ph="ph.ips"
 placeholder="格式
 1.1.1.1#US 美国-01
 example.com#JP 日本优选
@@ -385,27 +403,27 @@ example.com#JP 日本优选
 "></textarea>
         <div class="list-foot">
             <span class="status" id="count">0 条</span>
-            <a class="link" href="https://bestcf.fxxk.dedyn.io/" target="_blank" rel="noopener">没有 IP？点击这里优选 IP（BestCF)</a>
+            <a class="link" href="https://bestcf.fxxk.dedyn.io/" target="_blank" rel="noopener" data-i18n="link.pick">没有 IP？点击这里优选 IP（BestCF)</a>
         </div>
     </section>
 
     <section class="card">
-        <h2><span class="num">2</span><span>节点参数</span></h2>
-        <p class="note">参数会套用到上面所有节点，也可以粘贴一条分享链接自动填入。走 CDN / 优选 IP 时，伪装域名（Host 和 SNI 用同一个值）必须填你真实站点的域名，否则会握手失败。</p>
+        <h2><span class="num">2</span><span data-i18n="sec2">节点参数</span></h2>
+        <p class="note" data-i18n="sec2note">参数会套用到上面所有节点，也可以粘贴一条分享链接自动填入。走 CDN / 优选 IP 时，伪装域名（Host 和 SNI 用同一个值）必须填你真实站点的域名，否则会握手失败。</p>
 
 
         <div class="field" style="margin-bottom:14px">
-            <label for="import">从节点链接导入（可选）</label>
+            <label for="import" data-i18n="field.import">从节点链接导入（可选）</label>
             <div style="display:flex;gap:8px">
                 <input id="import" class="mono" type="text"
                        placeholder="vless:// vmess:// trojan:// ss:// hysteria2://">
-                <button type="button" class="btn" id="importBtn">导入</button>
+                <button type="button" class="btn" id="importBtn" data-i18n="btn.import">导入</button>
             </div>
         </div>
 
         <div class="grid">
             <div class="field">
-                <label for="type">协议</label>
+                <label for="type" data-i18n="field.type">协议</label>
                 <select id="type">
                     <option value="vless">VLESS</option>
                     <option value="vmess">VMess</option>
@@ -416,22 +434,22 @@ example.com#JP 日本优选
             </div>
 
             <div class="field">
-                <label for="port">端口</label>
+                <label for="port" data-i18n="field.port">端口</label>
                 <input id="port" type="number" value="443" min="1" max="65535">
             </div>
 
             <div class="field" data-for="vless vmess">
                 <label for="uuid">UUID</label>
-                <input id="uuid" class="mono" type="text" placeholder="留空自动生成">
+                <input id="uuid" class="mono" type="text" placeholder="留空自动生成" data-i18n-ph="ph.uuid">
             </div>
 
             <div class="field" data-for="trojan ss hysteria2">
-                <label for="password">密码</label>
-                <input id="password" class="mono" type="text" placeholder="留空自动生成">
+                <label for="password" data-i18n="field.password">密码</label>
+                <input id="password" class="mono" type="text" placeholder="留空自动生成" data-i18n-ph="ph.password">
             </div>
 
             <div class="field" data-for="ss">
-                <label for="method">加密方式</label>
+                <label for="method" data-i18n="field.method">加密方式</label>
                 <select id="method">
                     <option>aes-256-gcm</option>
                     <option>aes-128-gcm</option>
@@ -441,7 +459,7 @@ example.com#JP 日本优选
             </div>
 
             <div class="field" data-for="vless vmess trojan">
-                <label for="transport">传输方式</label>
+                <label for="transport" data-i18n="field.transport">传输方式</label>
                 <select id="transport">
                     <option value="ws">WebSocket</option>
                     <option value="tcp">TCP</option>
@@ -449,12 +467,12 @@ example.com#JP 日本优选
             </div>
 
             <div class="field" data-for="vless vmess trojan">
-                <label for="host">伪装域名（Host / SNI，可选）</label>
-                <input id="host" class="mono" type="text" placeholder="如 abc.workers.dev，留空则不写 Host 头">
+                <label for="host" data-i18n="field.host">伪装域名（Host / SNI，可选）</label>
+                <input id="host" class="mono" type="text" placeholder="如 abc.workers.dev，留空则不写 Host 头" data-i18n-ph="ph.host">
             </div>
 
             <div class="field" data-for="vless vmess trojan">
-                <label for="wspath">WS 路径</label>
+                <label for="wspath" data-i18n="field.path">WS 路径</label>
                 <input id="wspath" class="mono" type="text"
                        value="/apps/novels/proxyip=ProxyIP.HK.CMLiussss.net"
                        placeholder="/apps/novels/proxyip=ProxyIP.HK.CMLiussss.net">
@@ -464,91 +482,211 @@ example.com#JP 日本优选
 
         <div class="chips">
             <label data-for="vless vmess"><input type="checkbox" id="tls" checked> <span>TLS</span></label>
-            <label data-for="trojan hysteria2"><input type="checkbox" id="insecure"> <span>跳过证书验证</span></label>
+            <label data-for="trojan hysteria2"><input type="checkbox" id="insecure"> <span data-i18n="chip.insecure">跳过证书验证</span></label>
         </div>
 
         <details class="guide">
-            <summary>怎么拿到 UUID 和伪装域名？（Cloudflare 方式）</summary>
-            <div class="guide-body">
-                <p><strong>先记住一件事：</strong>本工具只负责把 IP 列表拼成配置文件，它不提供任何线路。你必须先有一个服务端，Cloudflare Worker 是最省事的免费方案。下面的 UUID 和伪装域名，都来自那个服务端。</p>
+            <summary data-i18n="guide.summary">怎么拿到 UUID 和伪装域名？（部署自带 worker.js）</summary>
+
+            <div class="guide-body" data-lang="zh">
+                <p><strong>先记住一件事：</strong>本工具只负责把 IP 列表拼成配置文件，不提供线路。服务端用配套的 <code>worker.js</code>，部署在 Cloudflare 上，免费且最省事。部署完打开域名，页面会直接显示「伪装域名」和「UUID」。</p>
 
                 <h3>① 生成 UUID（相当于账号密码）</h3>
                 <ol>
-                    <li>打开 <code>https://www.uuidgenerator.net/</code>，第一行的 v4 UUID 直接复制；电脑上也可以执行 <code>uuidgen</code>。</li>
+                    <li>打开 <code>https://www.uuidgenerator.net/</code>，复制第一行的 v4 UUID；电脑上也可以执行 <code>uuidgen</code>。</li>
                     <li>格式是 <code>8-4-4-4-12</code> 共 36 个字符，例如 <code>3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c</code>。</li>
-                    <li>这串要同时出现在<strong>两个地方</strong>：服务端（Worker 代码里）和本工具的「UUID」输入框，必须一模一样。</li>
-                    <li>不要用本工具自动生成的那串占位值，服务端不认识它，连接一定失败。</li>
+                    <li>这串会用在两个地方：Worker 代码和本工具的「UUID」输入框，必须完全一致。</li>
                 </ol>
 
-                <h3>② 在 Cloudflare 部署 Worker</h3>
+                <h3>② 在 Cloudflare 部署 worker.js</h3>
                 <ol>
-                    <li>登录 <code>dash.cloudflare.com</code>，左侧选 <strong>Workers &amp; Pages</strong> → <strong>Create</strong> → <strong>Worker</strong>。</li>
-                    <li>名字随便取，例如 <code>my-node</code>，创建后点 <strong>Edit code</strong>。</li>
-                    <li>把现成的 Worker 脚本粘进去（GitHub 上搜 <code>cmliu/edgetunnel</code>，选它的 <code>worker.js</code>），替换掉编辑器里的示例代码。</li>
-                    <li>在代码里找到 <code>let userID = '...'</code>，改成你第 ① 步生成的 UUID；路径一般是 <code>url.pathname === '/?ed=2048'</code> 这类判断，记下来。</li>
-                    <li>点 <strong>Deploy</strong>，等十几秒，页面会给一个地址：<code>https://my-node.用户名.workers.dev</code>。</li>
+                    <li>登录 <code>dash.cloudflare.com</code>，左侧 <strong>Workers &amp; Pages</strong> → <strong>Create</strong> → <strong>Worker</strong>。</li>
+                    <li>名字随便取，例如 <code>my-node</code>，点 <strong>Deploy</strong>。</li>
+                    <li>点 <strong>Edit code</strong>，把编辑器里的示例代码全选删掉。</li>
+                    <li>粘贴 <code>worker.js</code> 的全部内容。</li>
+                    <li>找到 <code>uuid: "00000000-0000-0000-0000-000000000000"</code>，换成第 ① 步生成的 UUID。</li>
+                    <li>点 <strong>Deploy</strong>。</li>
                 </ol>
+                <p>不想把 UUID 写死在代码里，也可以在 Worker 的 <strong>Settings → Variables</strong> 里添加 <code>UUID</code> 变量。</p>
 
-                <h3>③ 从地址里取出伪装域名</h3>
-                <p>上面那个地址去掉 <code>https://</code> 和结尾的斜杠，剩下的就是伪装域名：</p>
+                <h3>③ 打开域名，复制两个值</h3>
                 <table>
-                    <tr><th>Worker 地址</th><td><code>https://my-node.abc.workers.dev/</code></td></tr>
-                    <tr><th>伪装域名</th><td><code>my-node.abc.workers.dev</code></td></tr>
-                    <tr><th>SNI</th><td>同一个值（本工具已合并成一个输入框）</td></tr>
+                    <tr><th>部署后的地址</th><td><code>https://my-node.abc.workers.dev</code></td></tr>
+                    <tr><th>页面显示</th><td>伪装域名 · UUID（各带复制按钮）</td></tr>
                 </table>
-                <p>如果你给自己域名绑了橙色云朵（Proxied）并指向 Worker，就用那个域名，例如 <code>cdn.example.com</code>。</p>
+                <p>如果 UUID 那行出现红色警告，说明代码里的占位值还没改。</p>
 
                 <h3>④ 回来填这张表</h3>
                 <table>
-                    <tr><th>工具字段</th><th>填什么</th><th>来自</th></tr>
-                    <tr><td>UUID</td><td><code>3f2a1b4c-...</code></td><td>第 ① 步，和 Worker 里一致</td></tr>
-                    <tr><td>伪装域名（Host / SNI）</td><td><code>my-node.abc.workers.dev</code></td><td>第 ③ 步</td></tr>
-                    <tr><td>WS 路径</td><td><code>/?ed=2048</code></td><td>Worker 代码里的路径判断</td></tr>
-                    <tr><td>端口</td><td><code>443</code></td><td>Cloudflare 支持的端口</td></tr>
-                    <tr><td>节点列表</td><td><code>104.16.0.1#US 美国</code></td><td>BestCF 优选 IP</td></tr>
+                    <tr><th>工具字段</th><th>填什么</th></tr>
+                    <tr><td>协议</td><td>VLESS</td></tr>
+                    <tr><td>端口</td><td><code>443</code></td></tr>
+                    <tr><td>UUID</td><td>页面上复制的</td></tr>
+                    <tr><td>传输方式</td><td>WebSocket</td></tr>
+                    <tr><td>伪装域名（Host / SNI）</td><td>页面上复制的</td></tr>
+                    <tr><td>WS 路径</td><td>保持默认（服务端不校验）</td></tr>
+                    <tr><td>节点列表</td><td>优选 IP，一行一条</td></tr>
                 </table>
 
-                <h3>⑤ 验证是否配对</h3>
+                <h3>⑤ 验证</h3>
                 <ol>
-                    <li>浏览器打开 <code>https://伪装域名/路径</code>，能打开（哪怕是 404 页面）说明域名和 Worker 正常。</li>
-                    <li>路径正确时，用普通浏览器访问通常返回 <code>400 Bad Request</code> 或 <code>426 Upgrade Required</code>，这是 WebSocket 端点的正常反应。</li>
-                    <li>都是 <code>404</code> 说明路径写错了，回到 Worker 代码里核对。</li>
+                    <li>浏览器打开域名，能看到信息页 → Worker 正常。</li>
+                    <li>工具里转换、导入客户端、测延迟；有数字说明已经连上。</li>
+                    <li>连上后打开 <code>ip.sb</code>，确认出口 IP 变了。</li>
                 </ol>
 
                 <h3>⑥ 报错对照</h3>
                 <table>
                     <tr><th>现象</th><th>多半是</th></tr>
-                    <tr><td>超时</td><td>伪装域名或端口错；域名没走 Cloudflare；Worker 没部署成功</td></tr>
-                    <tr><td>失败 / 连接被关闭</td><td>UUID 和服务端不一致，或 WS 路径不对</td></tr>
-                    <tr><td>404</td><td>WS 路径错误</td></tr>
-                    <tr><td>证书错误</td><td>伪装域名填成了优选 IP</td></tr>
+                    <tr><td>页面打不开 / 522 / 1101</td><td>Worker 没部署成功，重新 Deploy 并查看日志</td></tr>
+                    <tr><td>UUID 那行有红色警告</td><td>代码里的占位 UUID 没改</td></tr>
+                    <tr><td>节点全部超时</td><td>伪装域名或端口错；没勾 TLS</td></tr>
+                    <tr><td>节点显示「失败」</td><td>UUID 和 Worker 里的不一致</td></tr>
                 </table>
 
-                <p class="guide-tip">UUID 加域名相当于你的账号密码，截图或分享时记得打码。Worker 免费版每天大约 10 万次请求，轻度使用足够。</p>
+                <p class="guide-tip">信息页是公开的，知道域名的人都能看到 UUID，别把域名发到公开群组。Worker 免费版每天约 10 万次请求，只支持 TCP。</p>
+            </div>
+
+            <div class="guide-body" data-lang="tw" hidden>
+                <p><strong>先記住一件事：</strong>本工具只負責把 IP 清單組成設定檔，不提供線路。伺服器用配套的 <code>worker.js</code>，部署在 Cloudflare 上，免費且最省事。部署完開啟網域，頁面會直接顯示「偽裝網域」和「UUID」。</p>
+
+                <h3>① 產生 UUID（相當於帳號密碼）</h3>
+                <ol>
+                    <li>開啟 <code>https://www.uuidgenerator.net/</code>，複製第一行的 v4 UUID；電腦上也可以執行 <code>uuidgen</code>。</li>
+                    <li>格式是 <code>8-4-4-4-12</code> 共 36 個字元，例如 <code>3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c</code>。</li>
+                    <li>這串會用在兩個地方：Worker 程式碼和本工具的「UUID」輸入框，必須完全一致。</li>
+                </ol>
+
+                <h3>② 在 Cloudflare 部署 worker.js</h3>
+                <ol>
+                    <li>登入 <code>dash.cloudflare.com</code>，左側 <strong>Workers &amp; Pages</strong> → <strong>Create</strong> → <strong>Worker</strong>。</li>
+                    <li>名字隨便取，例如 <code>my-node</code>，點 <strong>Deploy</strong>。</li>
+                    <li>點 <strong>Edit code</strong>，把編輯器裡的範例程式碼全選刪掉。</li>
+                    <li>貼上 <code>worker.js</code> 的全部內容。</li>
+                    <li>找到 <code>uuid: "00000000-0000-0000-0000-000000000000"</code>，換成第 ① 步產生的 UUID。</li>
+                    <li>點 <strong>Deploy</strong>。</li>
+                </ol>
+                <p>不想把 UUID 寫死在程式碼裡，也可以在 Worker 的 <strong>Settings → Variables</strong> 裡加入 <code>UUID</code> 變數。</p>
+
+                <h3>③ 開啟網域，複製兩個值</h3>
+                <table>
+                    <tr><th>部署後的位址</th><td><code>https://my-node.abc.workers.dev</code></td></tr>
+                    <tr><th>頁面顯示</th><td>偽裝網域 · UUID（各帶複製按鈕）</td></tr>
+                </table>
+                <p>如果 UUID 那行出現紅色警告，代表程式碼裡的佔位值還沒改。</p>
+
+                <h3>④ 回來填這張表</h3>
+                <table>
+                    <tr><th>工具欄位</th><th>填什麼</th></tr>
+                    <tr><td>協定</td><td>VLESS</td></tr>
+                    <tr><td>連接埠</td><td><code>443</code></td></tr>
+                    <tr><td>UUID</td><td>頁面上複製的</td></tr>
+                    <tr><td>傳輸方式</td><td>WebSocket</td></tr>
+                    <tr><td>偽裝網域（Host / SNI）</td><td>頁面上複製的</td></tr>
+                    <tr><td>WS 路徑</td><td>保持預設（伺服器不校驗）</td></tr>
+                    <tr><td>節點清單</td><td>優選 IP，一行一筆</td></tr>
+                </table>
+
+                <h3>⑤ 驗證</h3>
+                <ol>
+                    <li>瀏覽器開啟網域，能看到資訊頁 → Worker 正常。</li>
+                    <li>工具裡轉換、匯入用戶端、測延遲；有數字代表已經連上。</li>
+                    <li>連上後開啟 <code>ip.sb</code>，確認出口 IP 變了。</li>
+                </ol>
+
+                <h3>⑥ 錯誤對照</h3>
+                <table>
+                    <tr><th>現象</th><th>多半是</th></tr>
+                    <tr><td>頁面打不開 / 522 / 1101</td><td>Worker 沒部署成功，重新 Deploy 並查看日誌</td></tr>
+                    <tr><td>UUID 那行有紅色警告</td><td>程式碼裡的佔位 UUID 沒改</td></tr>
+                    <tr><td>節點全部逾時</td><td>偽裝網域或連接埠錯；沒勾 TLS</td></tr>
+                    <tr><td>節點顯示「失敗」</td><td>UUID 和 Worker 裡的不一致</td></tr>
+                </table>
+
+                <p class="guide-tip">資訊頁是公開的，知道網域的人都能看到 UUID，別把網域發到公開群組。Worker 免費版每天約 10 萬次請求，只支援 TCP。</p>
+            </div>
+
+            <div class="guide-body" data-lang="en" hidden>
+                <p><strong>One thing first:</strong> this tool only assembles your IP list into a config file. It provides no routes. The server is the bundled <code>worker.js</code>, deployed on Cloudflare — free and the least hassle. Once deployed, open the domain and the page shows the disguise domain and the UUID.</p>
+
+                <h3>1. Generate a UUID (your account password)</h3>
+                <ol>
+                    <li>Open <code>https://www.uuidgenerator.net/</code> and copy the first v4 UUID, or run <code>uuidgen</code> on a computer.</li>
+                    <li>The format is <code>8-4-4-4-12</code>, 36 characters, e.g. <code>3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c</code>.</li>
+                    <li>The same string is used in two places: the Worker code and the UUID field in this tool. They must match exactly.</li>
+                </ol>
+
+                <h3>2. Deploy worker.js on Cloudflare</h3>
+                <ol>
+                    <li>Sign in at <code>dash.cloudflare.com</code>, open <strong>Workers &amp; Pages</strong> → <strong>Create</strong> → <strong>Worker</strong>.</li>
+                    <li>Pick any name, e.g. <code>my-node</code>, then press <strong>Deploy</strong>.</li>
+                    <li>Press <strong>Edit code</strong> and delete the sample code.</li>
+                    <li>Paste the entire contents of <code>worker.js</code>.</li>
+                    <li>Find <code>uuid: "00000000-0000-0000-0000-000000000000"</code> and replace it with the UUID from step 1.</li>
+                    <li>Press <strong>Deploy</strong>.</li>
+                </ol>
+                <p>If you would rather not hard-code it, add a <code>UUID</code> variable under the Worker's <strong>Settings → Variables</strong>.</p>
+
+                <h3>3. Open the domain and copy both values</h3>
+                <table>
+                    <tr><th>Deployed address</th><td><code>https://my-node.abc.workers.dev</code></td></tr>
+                    <tr><th>Page shows</th><td>disguise domain · UUID, each with a copy button</td></tr>
+                </table>
+                <p>If the UUID row shows a red warning, the placeholder in the code was not replaced.</p>
+
+                <h3>4. Fill in this table</h3>
+                <table>
+                    <tr><th>Field</th><th>Value</th></tr>
+                    <tr><td>Protocol</td><td>VLESS</td></tr>
+                    <tr><td>Port</td><td><code>443</code></td></tr>
+                    <tr><td>UUID</td><td>copied from the page</td></tr>
+                    <tr><td>Transport</td><td>WebSocket</td></tr>
+                    <tr><td>Disguise domain (Host / SNI)</td><td>copied from the page</td></tr>
+                    <tr><td>WS path</td><td>leave the default (not checked)</td></tr>
+                    <tr><td>Node list</td><td>preferred IPs, one per line</td></tr>
+                </table>
+
+                <h3>5. Verify</h3>
+                <ol>
+                    <li>Open the domain in a browser; the info page means the Worker is alive.</li>
+                    <li>Convert, import into the client and run a latency test. A number means it connects.</li>
+                    <li>Open <code>ip.sb</code> and confirm the exit IP changed.</li>
+                </ol>
+
+                <h3>6. Error cheat sheet</h3>
+                <table>
+                    <tr><th>Symptom</th><th>Usually</th></tr>
+                    <tr><td>Page will not load / 522 / 1101</td><td>Worker not deployed; deploy again and check logs</td></tr>
+                    <tr><td>Red warning on the UUID row</td><td>The placeholder UUID in the code was not replaced</td></tr>
+                    <tr><td>All nodes time out</td><td>Wrong disguise domain or port; TLS off</td></tr>
+                    <tr><td>Nodes show "failed"</td><td>UUID does not match the Worker</td></tr>
+                </table>
+
+                <p class="guide-tip">The info page is public: anyone who knows the domain can read the UUID, so do not post it publicly. The Workers free plan allows about 100,000 requests per day and only TCP is supported.</p>
             </div>
         </details>
     </section>
 
     <section class="card">
-        <h2><span class="num">3</span><span>命名</span></h2>
+        <h2><span class="num">3</span><span data-i18n="sec3">命名</span></h2>
         <div class="grid" style="margin-top:12px">
             <div class="field">
-                <label for="prefix">名称前缀</label>
-                <input id="prefix" type="text" placeholder="例如 自用">
+                <label for="prefix" data-i18n="field.prefix">名称前缀</label>
+                <input id="prefix" type="text" placeholder="例如 自用" data-i18n-ph="ph.prefix">
             </div>
 
             <div class="field">
-                <label for="filename">下载文件名</label>
-                <input id="filename" class="mono" type="text" placeholder="留空用默认名称，可写 my-sub">
+                <label for="filename" data-i18n="field.filename">下载文件名</label>
+                <input id="filename" class="mono" type="text" placeholder="留空用默认名称，可写 my-sub" data-i18n-ph="ph.filename">
             </div>
         </div>
         <div class="chips">
-            <label><input type="checkbox" id="emoji" checked> <span>用国家码生成旗帜</span></label>
+            <label><input type="checkbox" id="emoji" checked> <span data-i18n="chip.emoji">用国家码生成旗帜</span></label>
         </div>
     </section>
 
     <section class="card">
-        <h2><span class="num">4</span><span>输出格式</span></h2>
+        <h2><span class="num">4</span><span data-i18n="sec4">输出格式</span></h2>
 
         <div class="formats" style="margin-top:12px">
             <label class="fmt"><input type="radio" name="fmt" value="clash" checked> Clash / Mihomo</label>
@@ -557,37 +695,24 @@ example.com#JP 日本优选
             <label class="fmt"><input type="radio" name="fmt" value="v2ray"> v2rayN</label>
         </div>
 
-        <button type="button" class="btn primary" id="run">转换</button>
+        <button type="button" class="btn primary" id="run" data-i18n="btn.convert">转换</button>
         <p class="status" id="status"></p>
 
-        <textarea id="out" readonly spellcheck="false" placeholder="结果会显示在这里"></textarea>
+        <textarea id="out" readonly spellcheck="false" placeholder="结果会显示在这里" data-i18n-ph="ph.out"></textarea>
 
         <div class="row">
-            <button type="button" class="btn" id="copy">复制</button>
-            <button type="button" class="btn" id="download">下载</button>
-            <button type="button" class="btn" id="clear">清空</button>
+            <button type="button" class="btn" id="copy" data-i18n="btn.copy">复制</button>
+            <button type="button" class="btn" id="download" data-i18n="btn.download">下载</button>
+            <button type="button" class="btn" id="clear" data-i18n="btn.clear">清空</button>
         </div>
 
-        <p class="help">
-        如何导入到客户端中？
-        
-        复制上面的文本
-        -
-        新建一个.txt文件
-        -
-        把文本塞进去
-        -
-        再把文件塞进客户端中
-        -
-        或下载文件导入
-        
-        </p>
+        <p class="help" data-i18n="help.import"></p>
     </section>
 
     <footer>
-        <p><span>作者：</span><a href="https://github.com/Toushou-114514/" target="_blank" rel="noopener">Toushou</a></p>
-        <p><span>GitHub 仓库：</span><a href="https://github.com/Toushou-114514/IP-To-Subscription-File" target="_blank" rel="noopener">IP-To-Subscription-File</a></p>
-        <p id="boot" class="boot bad">JavaScript 没有运行 —— 转换不能工作</p>
+        <p><span data-i18n="footer.author">作者：</span><a href="https://github.com/Toushou-114514/" target="_blank" rel="noopener">Toushou</a></p>
+        <p><span data-i18n="footer.repo">GitHub 仓库：</span><a href="https://github.com/Toushou-114514/IP-To-Subscription-File" target="_blank" rel="noopener">IP-To-Subscription-File</a></p>
+        <p id="boot" class="boot bad" data-i18n="boot.bad">JavaScript 没有运行 —— 转换不能工作</p>
     </footer>
 </div>
 
@@ -597,79 +722,273 @@ example.com#JP 日本优选
 
     /* ---------------- 文案 ---------------- */
 
-    var TEXT = {
-        "title": "IP转订阅文件",
-        "subtitle": "把 IP / 域名列表转换成 Clash、sing-box、Shadowrocket、v2rayN 可直接导入的配置",
-        "theme.auto": "跟随系统",
-        "theme.dark": "深色",
-        "theme.light": "浅色",
+    var LANG_KEY = "node-tool-lang";
 
-        "sec1": "节点列表",
-        "sec1note": "每行一条，格式 IP 或域名#国家码 名称，端口可以写在地址里；全角符号会自动转成半角。",
-        "link.pick": "没有 IP？点击这里优选 IP",
+    var DICT = {
+        zh: {
+            "title": "IP to Sub File",
+            "subtitle": "IP 转订阅文件 · 把 IP / 域名列表转换成 Clash、sing-box、Shadowrocket、v2rayN 可直接导入的配置",
+            "noscript": "当前环境没有运行 JavaScript，转换无法工作。请用 Chrome、Edge 等浏览器直接打开本文件。",
 
-        "sec2": "节点参数",
-        "sec2note": "参数会套用到上面所有节点，也可以粘贴一条分享链接自动填入。",
-        "field.import": "从节点链接导入（可选）",
-        "ph.import": "vless:// vmess:// trojan:// ss:// hysteria2://",
-        "btn.import": "导入",
-        "field.type": "协议",
-        "field.port": "端口",
-        "field.uuid": "UUID",
-        "ph.uuid": "留空自动生成",
-        "field.password": "密码",
-        "ph.password": "留空自动生成",
-        "field.method": "加密方式",
-        "field.transport": "传输方式",
-        "chip.tls": "TLS",
-        "chip.insecure": "跳过证书验证",
+            "theme.auto": "跟随系统",
+            "theme.dark": "深色",
+            "theme.light": "浅色",
 
-        "sec3": "命名与更新",
-        "field.prefix": "名称前缀",
-        "ph.prefix": "例如 自用",
-        "chip.emoji": "用国家码生成旗帜",
+            "sec1": "节点列表",
+            "sec1note": "每行一条，格式 IP 或域名#国家码 名称，端口可以写在地址里。可以前往BestCF上优选IP",
+            "ph.ips": "格式\n1.1.1.1#US 美国-01\nexample.com#JP 日本优选\n104.16.0.1:2053#HK 香港\n一行一个",
+            "link.pick": "没有 IP？点击这里优选 IP（BestCF)",
 
-        "sec4": "输出格式",
-        "btn.convert": "转换",
-        "btn.converting": "转换中…",
-        "btn.copy": "复制",
-        "btn.download": "下载",
-        "btn.clear": "清空",
-        "ph.out": "结果会显示在这里",
-        "help": "域名和 IP 都可以，写成 example.com#JP 日本 就能直接转。Shadowrocket 输出 Base64 订阅文本，v2rayN 输出明文分享链接。",
+            "sec2": "节点参数",
+            "sec2note": "参数会套用到上面所有节点，也可以粘贴一条分享链接自动填入。走 CDN / 优选 IP 时，伪装域名（Host 和 SNI 用同一个值）必须填你真实站点的域名，否则会握手失败。",
+            "field.import": "从节点链接导入（可选）",
+            "btn.import": "导入",
+            "field.type": "协议",
+            "field.port": "端口",
+            "field.uuid": "UUID",
+            "ph.uuid": "留空自动生成",
+            "field.password": "密码",
+            "ph.password": "留空自动生成",
+            "field.method": "加密方式",
+            "field.transport": "传输方式",
+            "field.host": "伪装域名（Host / SNI，可选）",
+            "ph.host": "如 abc.workers.dev，留空则不写 Host 头",
+            "field.path": "WS 路径",
+            "chip.tls": "TLS",
+            "chip.insecure": "跳过证书验证",
+            "guide.summary": "怎么拿到 UUID 和伪装域名？（部署自带 worker.js）",
 
-        "footer.author": "作者：",
-        "footer.repo": "GitHub 仓库：",
+            "sec3": "命名",
+            "field.prefix": "名称前缀",
+            "ph.prefix": "例如 自用",
+            "field.filename": "下载文件名",
+            "ph.filename": "留空用默认名称，可写 my-sub",
+            "chip.emoji": "用国家码生成旗帜",
 
-        "boot.ok": "JavaScript 正常 · 可以进行转换",
-        "boot.bad": "JavaScript 没有运行 —— 转换不可能工作",
+            "sec4": "输出格式",
+            "btn.convert": "转换",
+            "btn.converting": "转换中…",
+            "btn.copy": "复制",
+            "btn.download": "下载",
+            "btn.clear": "清空",
+            "ph.out": "结果会显示在这里",
+            "help.import": "如何导入到客户端中？\n\n复制上面的文本\n-\n新建一个 .txt 文件\n-\n把文本粘进去\n-\n再把文件导入客户端\n-\n或直接下载文件导入",
 
-        "count": "{n} 条",
-        "countCc": "{n} 条带国家码",
-        "countBad": "{n} 条格式无效",
+            "footer.author": "作者：",
+            "footer.repo": "GitHub 仓库：",
 
-        "status.working": "处理中…",
-        "status.geo": "查询国家码 {d}/{t}",
-        "status.generated": "已生成 {n} 个节点 · {fmt}",
-        "status.generatedWarn": "已生成 {n} 个节点；{extra}",
-        "status.autoUuid": "已自动生成 UUID",
-        "status.autoPass": "已自动生成密码",
-        "status.rememberOwn": "{msg}，记得换成你自己的",
-        "status.badSkipped": "{n} 条格式无效已跳过",
-        "status.noNodes": "没有识别到节点。示例：1.1.1.1#US 美国 或 example.com#JP 日本",
-        "status.failed": "转换失败：{msg}",
-        "status.copied": "已复制",
-        "status.nothingCopy": "还没有可复制的内容",
-        "status.downloaded": "已下载 {name}",
-        "status.nothingDownload": "还没有可下载的内容",
-        "status.cleared": "已清空",
-        "status.importEmpty": "请先粘贴节点链接",
-        "status.importSub": "这是订阅链接，不是节点链接。订阅地址无法拆成单个节点。",
-        "status.importBad": "无法识别这条链接。支持 vless / vmess / trojan / ss / hysteria2",
-        "status.importPartial": "链接已识别，但缺少服务器地址或内容被截断",
-        "status.imported": "已导入：{type} · {host}:{port}",
-        "status.scriptError": "脚本错误：{msg}（第 {line} 行）"
+            "boot.ok": "JavaScript 正常 · 可以进行转换",
+            "boot.bad": "JavaScript 没有运行 —— 转换不能工作",
+
+            "grp.select": "节点选择",
+            "grp.auto": "自动选择",
+            "cfg.count": "# 节点数：{n}",
+            "cfg.time": "# 生成时间：{time}",
+
+            "count": "{n} 条",
+            "countCc": "{n} 条带国家码",
+            "countBad": "{n} 条格式无效",
+
+            "status.working": "处理中…",
+            "status.geo": "查询国家码 {d}/{t}",
+            "status.generated": "已生成 {n} 个节点 · {fmt}",
+            "status.generatedWarn": "已生成 {n} 个节点；{extra}",
+            "status.autoUuid": "已自动生成 UUID",
+            "status.autoPass": "已自动生成密码",
+            "status.rememberOwn": "{msg}，记得换成你自己的",
+            "status.badSkipped": "{n} 条格式无效已跳过",
+            "status.noNodes": "没有识别到节点。示例：1.1.1.1#US 美国 或 example.com#JP 日本",
+            "status.failed": "转换失败：{msg}",
+            "status.copied": "已复制",
+            "status.nothingCopy": "还没有可复制的内容",
+            "status.downloaded": "已下载 {name}",
+            "status.nothingDownload": "还没有可下载的内容",
+            "status.cleared": "已清空",
+            "status.importEmpty": "请先粘贴节点链接",
+            "status.importSub": "这是订阅链接，不是节点链接。订阅地址无法拆成单个节点。",
+            "status.importBad": "无法识别这条链接。支持 vless / vmess / trojan / ss / hysteria2",
+            "status.importPartial": "链接已识别，但缺少服务器地址或内容被截断",
+            "status.imported": "已导入：{type} · {host}:{port}",
+            "status.scriptError": "脚本错误：{msg}（第 {line} 行）"
+        },
+
+        tw: {
+            "title": "IP to Sub File",
+            "subtitle": "IP 轉訂閱檔案 · 把 IP / 網域清單轉換成 Clash、sing-box、Shadowrocket、v2rayN 可直接匯入的設定檔",
+            "noscript": "目前環境沒有執行 JavaScript，轉換無法運作。請用 Chrome、Edge 等瀏覽器直接開啟本檔案。",
+
+            "theme.auto": "跟隨系統",
+            "theme.dark": "深色",
+            "theme.light": "淺色",
+
+            "sec1": "節點清單",
+            "sec1note": "每行一筆，格式 IP 或網域#國碼 名稱，連接埠可以寫在位址裡。可以前往 BestCF 上優選 IP",
+            "ph.ips": "格式\n1.1.1.1#US 美國-01\nexample.com#JP 日本優選\n104.16.0.1:2053#HK 香港\n一行一筆",
+            "link.pick": "沒有 IP？點這裡優選 IP（BestCF）",
+
+            "sec2": "節點參數",
+            "sec2note": "參數會套用到上面所有節點，也可以貼上一條分享連結自動填入。走 CDN / 優選 IP 時，偽裝網域（Host 和 SNI 用同一個值）必須填你真實站台的網域，否則會握手失敗。",
+            "field.import": "從節點連結匯入（選填）",
+            "btn.import": "匯入",
+            "field.type": "協定",
+            "field.port": "連接埠",
+            "field.uuid": "UUID",
+            "ph.uuid": "留空自動產生",
+            "field.password": "密碼",
+            "ph.password": "留空自動產生",
+            "field.method": "加密方式",
+            "field.transport": "傳輸方式",
+            "field.host": "偽裝網域（Host / SNI，選填）",
+            "ph.host": "如 abc.workers.dev，留空則不寫 Host 標頭",
+            "field.path": "WS 路徑",
+            "chip.tls": "TLS",
+            "chip.insecure": "略過憑證驗證",
+            "guide.summary": "怎麼拿到 UUID 和偽裝網域？（部署自帶 worker.js）",
+
+            "sec3": "命名",
+            "field.prefix": "名稱前綴",
+            "ph.prefix": "例如 自用",
+            "field.filename": "下載檔案名稱",
+            "ph.filename": "留空用預設名稱，可寫 my-sub",
+            "chip.emoji": "用國碼產生旗幟",
+
+            "sec4": "輸出格式",
+            "btn.convert": "轉換",
+            "btn.converting": "轉換中…",
+            "btn.copy": "複製",
+            "btn.download": "下載",
+            "btn.clear": "清空",
+            "ph.out": "結果會顯示在這裡",
+            "help.import": "如何匯入到用戶端中？\n\n複製上面的文字\n-\n新建一個 .txt 檔案\n-\n把文字貼進去\n-\n再把檔案匯入用戶端\n-\n或直接下載檔案匯入",
+
+            "footer.author": "作者：",
+            "footer.repo": "GitHub 儲存庫：",
+
+            "boot.ok": "JavaScript 正常 · 可以進行轉換",
+            "boot.bad": "JavaScript 沒有執行 —— 轉換不可能運作",
+
+            "grp.select": "節點選擇",
+            "grp.auto": "自動選擇",
+            "cfg.count": "# 節點數：{n}",
+            "cfg.time": "# 產生時間：{time}",
+
+            "count": "{n} 筆",
+            "countCc": "{n} 筆帶國碼",
+            "countBad": "{n} 筆格式無效",
+
+            "status.working": "處理中…",
+            "status.geo": "查詢國碼 {d}/{t}",
+            "status.generated": "已產生 {n} 個節點 · {fmt}",
+            "status.generatedWarn": "已產生 {n} 個節點；{extra}",
+            "status.autoUuid": "已自動產生 UUID",
+            "status.autoPass": "已自動產生密碼",
+            "status.rememberOwn": "{msg}，記得換成你自己的",
+            "status.badSkipped": "{n} 筆格式無效已略過",
+            "status.noNodes": "沒有辨識到節點。範例：1.1.1.1#US 美國 或 example.com#JP 日本",
+            "status.failed": "轉換失敗：{msg}",
+            "status.copied": "已複製",
+            "status.nothingCopy": "還沒有可複製的內容",
+            "status.downloaded": "已下載 {name}",
+            "status.nothingDownload": "還沒有可下載的內容",
+            "status.cleared": "已清空",
+            "status.importEmpty": "請先貼上節點連結",
+            "status.importSub": "這是訂閱連結，不是節點連結。訂閱位址無法拆成單一節點。",
+            "status.importBad": "無法辨識這條連結。支援 vless / vmess / trojan / ss / hysteria2",
+            "status.importPartial": "連結已辨識，但缺少伺服器位址或內容被截斷",
+            "status.imported": "已匯入：{type} · {host}:{port}",
+            "status.scriptError": "腳本錯誤：{msg}（第 {line} 行）"
+        },
+
+        en: {
+            "title": "IP to Sub File",
+            "subtitle": "Turn an IP / domain list into configs for Clash, sing-box, Shadowrocket and v2rayN",
+            "noscript": "JavaScript is not running, so conversion cannot work. Open this file in Chrome, Edge or another modern browser.",
+
+            "theme.auto": "System",
+            "theme.dark": "Dark",
+            "theme.light": "Light",
+
+            "sec1": "Node list",
+            "sec1note": "One entry per line: IP or domain#CC Name. The port can be included inline. Preferred IPs are available on BestCF.",
+            "ph.ips": "Format\n1.1.1.1#US United States-01\nexample.com#JP Japan\n104.16.0.1:2053#HK Hong Kong\none per line",
+            "link.pick": "No IPs? Pick preferred IPs here (BestCF)",
+
+            "sec2": "Node parameters",
+            "sec2note": "These settings apply to every node above. You can also paste a share link to fill them in. Behind a CDN, the disguise domain (one value for Host and SNI) must be your real site domain, otherwise the handshake fails.",
+            "field.import": "Import from a node link (optional)",
+            "btn.import": "Import",
+            "field.type": "Protocol",
+            "field.port": "Port",
+            "field.uuid": "UUID",
+            "ph.uuid": "Leave empty to auto-generate",
+            "field.password": "Password",
+            "ph.password": "Leave empty to auto-generate",
+            "field.method": "Cipher",
+            "field.transport": "Transport",
+            "field.host": "Disguise domain (Host / SNI, optional)",
+            "ph.host": "e.g. abc.workers.dev; empty means no Host header",
+            "field.path": "WS path",
+            "chip.tls": "TLS",
+            "chip.insecure": "Skip certificate verification",
+            "guide.summary": "How to get a UUID and a disguise domain (bundled worker.js)",
+
+            "sec3": "Naming",
+            "field.prefix": "Name prefix",
+            "ph.prefix": "e.g. home",
+            "field.filename": "Download file name",
+            "ph.filename": "Leave empty for the default; e.g. my-sub",
+            "chip.emoji": "Generate flags from country codes",
+
+            "sec4": "Output format",
+            "btn.convert": "Convert",
+            "btn.converting": "Converting…",
+            "btn.copy": "Copy",
+            "btn.download": "Download",
+            "btn.clear": "Clear",
+            "ph.out": "The result will appear here",
+            "help.import": "How do I import this into a client?\n\nCopy the text above\n-\nCreate a .txt file\n-\nPaste the text into it\n-\nImport that file into your client\n-\nor just download the generated file",
+
+            "footer.author": "Author: ",
+            "footer.repo": "GitHub repo: ",
+
+            "boot.ok": "JavaScript OK · ready to convert",
+            "boot.bad": "JavaScript is not running — conversion cannot work",
+
+            "grp.select": "Proxy",
+            "grp.auto": "Auto",
+            "cfg.count": "# Nodes: {n}",
+            "cfg.time": "# Generated: {time}",
+
+            "count": "{n} entries",
+            "countCc": "{n} with country code",
+            "countBad": "{n} invalid",
+
+            "status.working": "Working…",
+            "status.geo": "Looking up country codes {d}/{t}",
+            "status.generated": "Generated {n} nodes · {fmt}",
+            "status.generatedWarn": "Generated {n} nodes; {extra}",
+            "status.autoUuid": "UUID generated automatically",
+            "status.autoPass": "Password generated automatically",
+            "status.rememberOwn": "{msg}; remember to replace it with your own",
+            "status.badSkipped": "{n} invalid lines skipped",
+            "status.noNodes": "No nodes found. Example: 1.1.1.1#US United States or example.com#JP Japan",
+            "status.failed": "Conversion failed: {msg}",
+            "status.copied": "Copied",
+            "status.nothingCopy": "Nothing to copy yet",
+            "status.downloaded": "Downloaded {name}",
+            "status.nothingDownload": "Nothing to download yet",
+            "status.cleared": "Cleared",
+            "status.importEmpty": "Paste a node link first",
+            "status.importSub": "That is a subscription URL, not a node link. A subscription cannot be split into individual nodes.",
+            "status.importBad": "Unrecognised link. Supported: vless / vmess / trojan / ss / hysteria2",
+            "status.importPartial": "Link recognised, but the server address is missing or the content was truncated",
+            "status.imported": "Imported: {type} · {host}:{port}",
+            "status.scriptError": "Script error: {msg} (line {line})"
+        }
     };
+
+    var lang = "zh";
+    var TEXT = DICT.zh;
 
     var THEME_KEY = "node-tool-theme";
     var themeMode = "auto";
@@ -685,6 +1004,57 @@ example.com#JP 日本优选
             }
         }
         return s;
+    }
+
+    function initialLang() {
+        var saved = null;
+        try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
+        if (saved && DICT[saved]) return saved;
+
+        var nav = String((navigator && navigator.language) || "zh").toLowerCase();
+        if (nav.indexOf("en") === 0) return "en";
+        if (nav.indexOf("zh") === 0) {
+            if (nav.indexOf("hant") >= 0 || /-(tw|hk|mo)\b/.test(nav)) return "tw";
+            return "zh";
+        }
+        return "zh";
+    }
+
+    function setLang(code) {
+        if (!DICT[code]) code = "zh";
+        lang = code;
+        TEXT = DICT[code];
+
+        try { localStorage.setItem(LANG_KEY, code); } catch (e) {}
+
+        document.documentElement.lang = code === "en" ? "en" : (code === "tw" ? "zh-Hant" : "zh-CN");
+        document.title = t("title");
+
+        var nodes = document.querySelectorAll("[data-i18n]");
+        for (var i = 0; i < nodes.length; i++) {
+            nodes[i].textContent = t(nodes[i].getAttribute("data-i18n"));
+        }
+
+        var phs = document.querySelectorAll("[data-i18n-ph]");
+        for (var j = 0; j < phs.length; j++) {
+            phs[j].setAttribute("placeholder", t(phs[j].getAttribute("data-i18n-ph")));
+        }
+
+        var bodies = document.querySelectorAll("[data-lang]");
+        for (var k = 0; k < bodies.length; k++) {
+            bodies[k].hidden = bodies[k].getAttribute("data-lang") !== code;
+        }
+
+        var sel = $("lang");
+        if (sel) sel.value = code;
+
+        updateThemeLabel();
+
+        var boot = $("boot");
+        if (boot && boot.getAttribute("data-js") === "ok") boot.textContent = t("boot.ok");
+
+        if (state.current) render();
+        else refreshCount();
     }
 
     window.onerror = function (msg, src, line) {
@@ -1248,10 +1618,13 @@ example.com#JP 日本优选
         }
         var itemsText = items.join("\n");
 
+        var grpSel = t("grp.select");
+        var grpAuto = t("grp.auto");
+
         var head =
             "# Clash / Mihomo\n" +
-            "# 节点数：" + nodes.length + "\n" +
-            "# 生成时间：" + new Date().toLocaleString() + "\n" +
+            t("cfg.count", { n: nodes.length }) + "\n" +
+            t("cfg.time", { time: new Date().toLocaleString() }) + "\n" +
             "\n";
 
         return head +
@@ -1261,13 +1634,13 @@ example.com#JP 日本优选
             "log-level: info\n" +
             "proxies:\n" + proxies.join("\n") + "\n" +
             "proxy-groups:\n" +
-            "  - name: \"节点选择\"\n" +
+            "  - name: " + yq(grpSel) + "\n" +
             "    type: select\n" +
             "    proxies:\n" +
-            "      - \"自动选择\"\n" +
+            "      - " + yq(grpAuto) + "\n" +
             "      - \"DIRECT\"\n" +
             itemsText + "\n" +
-            "  - name: \"自动选择\"\n" +
+            "  - name: " + yq(grpAuto) + "\n" +
             "    type: url-test\n" +
             "    url: \"http://www.gstatic.com/generate_204\"\n" +
             "    interval: 300\n" +
@@ -1276,7 +1649,7 @@ example.com#JP 日本优选
             itemsText + "\n" +
             "rules:\n" +
             "  - GEOIP,CN,DIRECT\n" +
-            "  - MATCH,节点选择\n";
+            "  - MATCH," + grpSel + "\n";
     }
 
     /* ---------------- sing-box ---------------- */
@@ -1361,8 +1734,11 @@ example.com#JP 日本优选
             list.push(sbOutbound(nodes[i], names[i], o));
         }
 
+        var grpSel = t("grp.select");
+        var grpAuto = t("grp.auto");
+
         var sel = names.slice();
-        sel.push("自动选择");
+        sel.push(grpAuto);
         sel.push("direct");
 
         var cfg = {
@@ -1377,18 +1753,18 @@ example.com#JP 日本优选
             ],
             outbounds: [
                 {
-                    type: "selector", tag: "节点选择",
+                    type: "selector", tag: grpSel,
                     outbounds: sel,
                     "default": names[0] || "direct"
                 },
                 {
-                    type: "urltest", tag: "自动选择",
+                    type: "urltest", tag: grpAuto,
                     outbounds: names.slice(),
                     url: "https://www.gstatic.com/generate_204",
                     interval: "5m", tolerance: 50
                 }
             ].concat(list).concat([{ type: "direct", tag: "direct" }]),
-            route: { rules: [], "final": "节点选择", auto_detect_interface: true }
+            route: { rules: [], "final": grpSel, auto_detect_interface: true }
         };
 
         return JSON.stringify(cfg, null, 2);
@@ -1891,6 +2267,12 @@ example.com#JP 日本优选
         bootEl.textContent = t("boot.ok");
     }
 
+    var langSel = $("lang");
+    if (langSel) {
+        langSel.addEventListener("change", function () { setLang(langSel.value); });
+    }
+
+    setLang(initialLang());
     syncFields();
     markFormat();
     refreshCount();

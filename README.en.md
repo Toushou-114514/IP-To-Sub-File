@@ -1,197 +1,770 @@
-# IP To Subscription File
+# IP to Sub File · Complete User Guide
 
-Turn a list of IPs / domains into configs that *Clash, sing-box, Shadowrocket and v2rayN* can import directly.
-
-Single file, zero dependencies, pure front end — just open the page and use it.
-
----
-
-![HTML](https://img.shields.io/badge/HTML-70%25-e34c26?style=flat-square&logo=html5)
-![CSS](https://img.shields.io/badge/CSS-20%25-563d7c?style=flat-square&logo=css3)
-![JavaScript](https://img.shields.io/badge/JavaScript-10%25-f1e05a?style=flat-square&logo=javascript)
-
-[English](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.en.md)
-[简体中文](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.zh.md)
-[繁體中文](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/README.md)
-
-Run online: [Open the web app](https://toushou-114514.github.io/IP-To-Subscription-File/)
-
-[Detailed User Guide / Tutorial](https://github.com/Toushou-114514/IP-To-Subscription-File/blob/toushou/User%20Guide.en.md)
-
----
-## Features
-
-- One node per line, with support for IPv4, IPv6 and domains; the port can be part of the address
-- Recognizes `#CC` country codes and renders the matching flag (🇯🇵 🇺🇸 🇭🇰 …)
-- Looks up the country automatically when no code is given (cached locally for 30 days)
-- Quick link to BestCF for picking IPs
-- Four output formats, switchable at any time without re-entering anything
-- Paste a share link (vless / vmess / trojan / ss / hysteria2) to fill in the settings
-- Generates a UUID or password automatically when the field is left empty, and reminds you to replace it
-- Produces configs that clients can import as-is
-- Dark / light / follow-system themes, remembered across visits
-- Copy, download and clear in one tap
-- A status line at the bottom of the page: if JavaScript is not running, it tells you
+> Turn a list of IPs / domains into a config you can import straight into Clash, sing-box, Shadowrocket or v2rayN.
+> This guide covers: how the tool works, what every field means, how to use each output format, how to import it, and how to debug failures.
 
 ---
 
-## Usage
+## Contents
 
-1. Open the web app
-2. Paste your IPs / domains into “Node list” using the format below
-3. Choose the protocol, port and credentials in “Node settings”
-4. Pick the target client under “Output format”
-5. Click “Copy” or “Download”, then import into your client
-
-> No installation and no network access required (only the country lookup calls a ••• API).
+1. [What the tool is](#1-what-the-tool-is)
+2. [Three concepts to understand first](#2-three-concepts-to-understand-first)
+3. [Before you start](#3-before-you-start)
+4. [Interface overview](#4-interface-overview)
+5. [Card 1: Node list](#5-card-1-node-list)
+6. [Card 2: Node parameters](#6-card-2-node-parameters)
+7. [Card 3: Naming](#7-card-3-naming)
+8. [Card 4: Output format](#8-card-4-output-format)
+9. [What the generated config looks like](#9-what-the-generated-config-looks-like)
+10. [Importing into clients](#10-importing-into-clients)
+11. [Verifying it works](#11-verifying-it-works)
+12. [Error reference](#12-error-reference)
+13. [Deploying your own worker.js](#13-deploying-your-own-workerjs-recommended)
+14. [Security and quotas](#14-security-and-quotas)
+15. [FAQ](#15-faq)
+16. [Quick reference](#16-quick-reference)
 
 ---
 
-## Input format
+## 1. What the tool is
 
-One node per line, basic form:
+A **single-file web tool** that runs entirely in the browser. None of your data is uploaded anywhere.
 
-```
-1.1.1.1#US US-01
-example.com#JP Japan-01
-104.16.0.1:2053#HK HongKong-02
-```
-
-Structure:
+It does exactly one thing:
 
 ```
-address[:port][#CC name]
+your IP list + parameters  →  a config file your client can read
 ```
 
-| Form | Meaning |
+It **does not provide any routes**. It is not a server. Every value in the config (UUID, domain, path) must come from a server you already have.
+
+### What it can do
+
+| Capability | Description |
 | --- | --- |
-| `1.1.1.1` | Address only; uses the global port from step 2 |
-| `1.1.1.1:8443` | A port in the line overrides the global port |
-| `example.com` | Domain; no country lookup is performed |
-| `example.com:443#JP Tokyo` | Country code plus name |
-| `example.com#Tokyo` | No country code; the whole tail becomes the name |
-| `[2606:4700::1]:8443#SG Singapore` | IPv6 must be wrapped in square brackets |
+| Batch node generation | One IP or domain per line, dozens or hundreds at once |
+| Four output formats | Clash, sing-box, Shadowrocket, v2rayN |
+| Five protocols | VLESS, VMess, Trojan, Shadowsocks, Hysteria2 |
+| Share-link import | Paste a `vless://` style link and every field is filled in |
+| Automatic flags | Country code becomes an emoji such as 🇭🇰 🇯🇵 |
+| Custom file name | Name the download yourself; the extension is added automatically |
+| Dark mode | Follow system / dark / light |
 
-Details:
+### What it cannot do
 
-- The country code must be exactly two ASCII letters, placed right after `#` and separated from the name by a space
-- The name is optional; when omitted, the address is used as the name
-- Duplicate names automatically get a suffix (`Japan-01`, `Japan-01 2`, …)
-- Invalid lines are skipped, and both the counter and the status line tell you how many were skipped
-- Lines starting with `#`, or containing `//`, are treated as comments and ignored
-
-Example (safe to paste as a test):
-
-```
-1.1.1.1#US US-01
-cdn.7zz.cn:443#JP Japan-01
-104.16.0.1:2053#HK HongKong-02
-[2606:4700:4700::1111]:8443#SG Singapore
-```
-
-[BestCF IP picker](https://bestcf.fxxk.dedyn.io/)
+- ❌ It will not set up a server for you
+- ❌ It does not auto-update configs (regenerate when you need a change)
+- ❌ It does not bypass network restrictions by itself
 
 ---
 
-## Node settings
+## 2. Three concepts to understand first
 
-| Setting | Description |
-| --- | --- |
-| Protocol | VLESS / VMess / Trojan / Shadowsocks / Hysteria2 |
-| Port | Global default port, 443 by default; a port in the line takes precedence |
-| UUID | Used by VLESS and VMess; generated automatically when empty |
-| Password | Used by Trojan, SS and Hysteria2; generated automatically when empty |
-| Cipher | Shadowsocks only, defaults to `aes-256-gcm` |
-| Transport | WebSocket or TCP, only applies to VLESS / VMess / Trojan |
-| TLS | Whether VLESS / VMess use TLS, on by default |
-| Skip certificate check | Trojan / Hysteria2 only |
-| Name prefix | Adds a common prefix to every node name, e.g. “Home” |
-| Auto-update interval | Written into the Clash config as `profile-update-interval`, 24 hours by default |
-| Flag from country code | When off, node names carry no flag |
+```
+your device ──► preferred IP (Cloudflare edge) ──► server (Worker / VPS) ──► destination
+                     ↑ Host tells Cloudflare which site
+                     ↑ UUID tells the server you are a valid user
+```
 
-> An auto-generated UUID or password is only a placeholder. The server will not accept it, so the node cannot connect — replace it with the real credentials, or paste a real share link under “Import from share link”.
-
----
-
-## Output formats
-
-| Option | Content | Download file name |
+| Term | What it is | Who provides it |
 | --- | --- | --- |
-| Clash / Mihomo | YAML config with `proxies`, `proxy-groups`, `rules` | `config.yaml` |
-| sing-box | JSON config with tun + mixed inbounds and selector / urltest outbounds | `config.json` |
-| Shadowrocket | Base64-encoded subscription text | `shadowrocket-sub.txt` |
-| v2rayN | Plain-text share links, one per line | `v2rayn-sub.txt` |
+| **Node / server address** | The IP or domain you actually connect to | Preferred-IP sites / your domain |
+| **Port** | Port used for the connection | Server config |
+| **UUID / password** | Credential, equivalent to a username and password | You generate it and put it in the server |
+| **Disguise domain (Host / SNI)** | Tells the CDN which site to route to | Your domain (a Worker gives you one) |
+| **WS path** | The URL path the server listens on | Server config |
 
-### Generated node rules
+The three most common failures are always the same story — one of these five values does not match:
 
-Every node includes `name`, `type`, `server` and `port`, plus the credential fields for its protocol, and:
-
-- WebSocket `path` is fixed to `/`; there is no entry to customize it
-- TLS `sni` / `servername` is always the server address itself
-- No Host / camouflage-domain header is written
-- No gRPC service name is written
-
-### Clash config layout
-
-- `mixed-port: 7890`, `allow-lan: false`, `mode: rule`
-- Proxy groups: `节点选择` (select) + `自动选择` (url-test)
-- Rules: `GEOIP,CN,DIRECT` and `MATCH,节点选择`
-
-### sing-box config layout
-
-- Inbounds: `tun` (auto route) + `mixed` (`127.0.0.1:2080`)
-- Outbounds: `节点选择` (selector), `自动选择` (urltest, 5-minute probe), one per node, and `direct`
-- Routing: defaults to `节点选择`, with `auto_detect_interface` enabled
+1. UUID was left as the auto-generated placeholder → server rejects it
+2. WS path differs by one character → 404
+3. Disguise domain was set to a preferred IP → certificate error / timeout
 
 ---
 
-## Import from a share link
+## 3. Before you start
 
-Paste a share link into “Import from share link” and the tool detects the protocol, address, port, credentials and transport, then appends the node to the list.
+| You need | Notes |
+| --- | --- |
+| A browser | Phone or desktop; the layout is responsive |
+| The tool page | Your GitHub Pages URL, or the HTML file opened locally |
+| A server | Cloudflare Worker / your own VPS / somebody else's service (see [section 13](#13-where-the-server-comes-from-cloudflare-worker)) |
+| A client | Clash Verge, sing-box, Shadowrocket or v2rayN |
+
+> The page works fully offline. It only goes online when a line has no country code and it looks up a flag by IP.
+
+---
+
+## 4. Interface overview
+
+Four blocks, top to bottom:
+
+```
+┌──────────────────────────────────────┐
+│ Title + theme toggle                 │
+├──────────────────────────────────────┤
+│ 1 Node list      ← paste your IPs    │
+├──────────────────────────────────────┤
+│ 2 Node parameters ← UUID / domain / path │
+│   └ collapsible guide: where to get them │
+├──────────────────────────────────────┤
+│ 3 Naming         ← prefix + file name │
+├──────────────────────────────────────┤
+│ 4 Output format  ← pick, convert, download │
+└──────────────────────────────────────┘
+Footer: author, repo, JS status
+```
+
+**Auto-convert**: about 0.5 seconds after you change any field the output is regenerated. You can also press **Convert** manually.
+
+**Theme toggle**: top-right button cycles "follow system → dark → light"; your choice is remembered.
+
+**Footer status**: the small line at the very bottom. If it shows a red "JavaScript is not running", the script did not execute and conversion will not work — usually a corrupted file from copy-paste.
+
+---
+
+## 5. Card 1: Node list
+
+### Basic format
+
+```
+IP-or-domain#CC Name
+```
+
+One per line:
+
+```
+104.16.0.1#HK Hong Kong-01
+104.17.2.3#JP Japan-02
+cdn.example.com#US United States
+2400:cb00::1#SG Singapore IPv6
+```
+
+### Fields
+
+| Part | Required | Notes |
+| --- | --- | --- |
+| Address | ✅ | IPv4, IPv6 or domain |
+| `#` | Optional | Separator before the display name |
+| Country code | Optional | Two letters such as `HK`, `JP`, `US`; drives the flag |
+| Name | Optional | Defaults to the address itself |
+
+### Ports can be inline
+
+```
+104.16.0.1:2053#HK Hong Kong
+```
+
+This node uses port `2053`, which **overrides** the global port in card 2.
+
+- No port inline → uses the card 2 port
+- Port inline → uses that port
+
+### IPv6 syntax
+
+```
+[2400:cb00::1]:443#SG Singapore
+[2400:cb00::1]#SG Singapore
+```
+
+Brackets stop the colons from being read as a port separator.
+
+### When the country code is missing
+
+```
+104.16.0.1#Hong Kong
+```
+
+The tool queries a public API (`ipwho.is`, falling back to `api.country.is`) to find the country, then adds the flag. Results are cached for 30 days.
+
+- Domains are never looked up (the lookup only works on IPs)
+- If the lookup fails the name is used as-is; conversion still works
+
+### Lines that are skipped
+
+- Empty lines
+- Lines starting with `#` or `//`
+- Obviously invalid addresses (e.g. `999.1.1.1`)
+- Malformed domains
+
+Skipping never affects the other lines; the valid count is shown at the bottom.
+
+### Tips
+
+- 50–100 lines at once is fine; conversion is fast
+- Names may contain spaces, Chinese characters and symbols
+- The same IP on different ports produces separate nodes
+
+---
+
+## 6. Card 2: Node parameters
+
+Everything in this card is **applied to every node above**.
+
+### 6.1 Import from a node link (optional)
+
+Paste a share link and press **Import**. Every field below is filled in and the node list is generated automatically.
 
 Supported schemes:
 
-- `vless://`
-- `vmess://` (Base64 JSON)
-- `trojan://`
-- `ss://` (both SIP002 and the legacy Base64 form)
-- `hysteria2://` and `hy2://`
+```
+vless://
+vmess://
+trojan://
+ss://
+hysteria2://
+hy2://
+```
 
-Notes:
+Imported values:
 
-- **Subscription URLs cannot be imported.** Anything starting with `http(s)://` is a subscription address and cannot be split into individual nodes; the page will tell you so.
-- If the link is truncated or the server address is missing, it reports “Link recognized, but the server address is missing or the content is truncated.”
-- The same address is not added twice.
+- Server address and port
+- UUID or password
+- Transport (ws / tcp)
+- TLS flag
+- **Disguise domain (Host)**
+- **SNI**
+- **WS path**
+- Node name
+
+> If you have the original link, do not type by hand — import is safer.
+
+### 6.2 Protocol
+
+| Protocol | Credential | Typical use |
+| --- | --- | --- |
+| VLESS | UUID | Workers / Xray, most common |
+| VMess | UUID | Older but widely supported |
+| Trojan | Password | Looks like ordinary HTTPS traffic |
+| Shadowsocks | Password + cipher | Lightweight, broad client support |
+| Hysteria2 | Password | QUIC-based, good on poor networks |
+
+### 6.3 Port
+
+Default `443`.
+
+Behind Cloudflare only these ports are proxied:
+
+```
+443  2053  2083  2087  2096  8443
+```
+
+Anything else is not forwarded and will never connect.
+
+### 6.4 UUID / password
+
+**Must match the server exactly.**
+
+If left empty the tool generates a placeholder and warns you — that value only keeps the config structurally valid and **will not connect to anything**.
+
+UUID format:
+
+```
+8-4-4-4-12
+3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c
+```
+
+Generate one with:
+
+- Online: `https://www.uuidgenerator.net/`
+- Linux / macOS: `uuidgen`
+- Linux: `cat /proc/sys/kernel/random/uuid`
+
+> Trojan, Shadowsocks and Hysteria2 use a password instead of a UUID. It also has to come from the server.
+
+### 6.5 Cipher (Shadowsocks only)
+
+| Option | Notes |
+| --- | --- |
+| `aes-256-gcm` | Default, best compatibility |
+| `aes-128-gcm` | Lighter |
+| `chacha20-ietf-poly1305` | Faster on devices without AES acceleration |
+| `2022-blake3-aes-256-gcm` | Newer; server must support it |
+
+Must match the server or the connection fails immediately.
+
+### 6.6 Transport (VLESS / VMess / Trojan)
+
+| Option | Notes |
+| --- | --- |
+| **WebSocket** | HTTP upgrade; traverses CDNs; the default |
+| TCP | Direct connection; cannot go through a CDN |
+
+Behind Cloudflare you must use WebSocket.
+
+### 6.7 Disguise domain (Host / SNI)
+
+**Host and SNI are merged into a single field.** One value is used for both.
+
+| Scenario | What to enter |
+| --- | --- |
+| Cloudflare Worker | `my-node.username.workers.dev` |
+| Your own domain behind CF | `cdn.example.com` (must be orange-clouded) |
+| Somebody else's service | The `host=` / `sni=` values from the share link |
+
+Rules:
+
+- No `https://`
+- No trailing `/`
+- **Never a preferred IP** (an IP has no matching certificate, TLS will fail)
+
+If left empty:
+
+- Server address is an IP → no Host header, SNI uses the IP
+- Server address is a domain → Host and SNI both use that domain
+
+> This preserves the old behaviour for compatibility. Behind a CDN you should always fill it in.
+
+### 6.8 WS path
+
+The URL path the server listens on.
+
+| Source | How to find it |
+| --- | --- |
+| Share link | The value after `path=`, URL-decoded (`%2F` = `/`) |
+| Worker code | A check such as `url.pathname === '/?ed=2048'` |
+| Nginx reverse proxy | `location /ws { ... }` |
+| Parameter absent | Usually `/` |
+
+The tool ships with this default:
+
+```
+/apps/novels/proxyip=ProxyIP.HK.CMLiussss.net
+```
+
+Change it to your real path if it does not apply.
+
+Common values: `/`, `/ws`, `/ray`, `/vless`, `/?ed=2048`.
+
+**The path must match character for character** — one wrong character gives a 404.
+
+> With the bundled `worker.js`, the server does not check the path, so the default value is fine.
+
+### 6.9 TLS / skip certificate verification
+
+| Checkbox | Applies to | Notes |
+| --- | --- | --- |
+| TLS (on by default) | VLESS / VMess | Required behind a CDN |
+| Skip certificate verification | Trojan / Hysteria2 | For self-signed certs; not for public CDNs |
 
 ---
 
-## FAQ
+## 7. Card 3: Naming
 
-**The node will not connect after import.**
-The generated UUID / password is a random placeholder. Replace it with the real credentials from your server, or paste the real share link under “Import from share link”.
+### Name prefix
 
-**Nothing happens when I convert.**
-Check the status line in the footer first. If it says “JavaScript is not running”, the browser has scripting disabled, or you are previewing the file in a text editor — open it in a real browser.
+Prepended to every node name so you can tell sources apart.
 
-**A domain has no flag.**
-Domains are not geo-looked-up. Add a country code manually, e.g. `#JP`.
+```
+prefix "home-" + node "Hong Kong" → "home-Hong Kong"
+```
 
-**Why are there no Host, path or SNI fields?**
-The tool follows fixed rules: path `/`, SNI equal to the server address, no Host header. This keeps exports simple and avoids connection failures caused by a wrong camouflage field.
+Leave empty for no prefix.
 
-**Can I generate subscription links to share with others?**
-Yes. Choose Shadowrocket for Base64 subscription text, or v2rayN for plain links, then host the downloaded file on your own static hosting.
+### Download file name
+
+| Input | Result (Clash example) |
+| --- | --- |
+| Empty | `config.yaml` |
+| `my-sub` | `my-sub.yaml` |
+| `my-sub.txt` | `my-sub.txt` (extension kept) |
+| `a/b:c` | `a_b_c.yaml` (illegal characters become `_`) |
+
+Default names by format:
+
+| Format | Default file name |
+| --- | --- |
+| Clash | `config.yaml` |
+| sing-box | `config.json` |
+| Shadowrocket | `shadowrocket-sub.txt` |
+| v2rayN | `v2rayn-sub.txt` |
+
+### Generate flags from country codes
+
+When checked, `#HK Hong Kong` becomes `🇭🇰 Hong Kong`.
+
+Some clients render emoji poorly; turn it off if that bothers you.
 
 ---
 
-## Disclaimer
+## 8. Card 4: Output format
 
-This project only converts network configuration between formats. It does not provide any server, node or proxy service. Please follow the laws and regulations of your region and the terms of service of your provider.
+| Format | Output | Best for |
+| --- | --- | --- |
+| **Clash / Mihomo** | Full YAML config | Clash Verge, Clash Meta, ClashX |
+| **sing-box** | Full JSON config | SFA / SFI / SFM |
+| **Shadowrocket** | Base64 subscription text | Shadowrocket |
+| **v2rayN** | Plain share links, one per line | v2rayN, v2rayNG |
+
+### What the Clash config contains
+
+- `mixed-port: 7890`, `allow-lan: false`, `mode: rule`
+- `proxies:` one entry per node
+- `proxy-groups:` two groups
+  - **Node Select** (manual)
+  - **Auto Select** (url-test)
+- `rules:`
+  - `GEOIP,CN,DIRECT`
+  - `MATCH,Node Select`
+
+### What the sing-box config contains
+
+- `log`, `dns`, `inbounds` (tun / mixed)
+- `outbounds`: one per node plus a `urltest` auto group
+- `route`: mainland IPs and domains direct, everything else through the auto group
+
+### Shadowrocket output
+
+A standard Base64 subscription; decoded it is a list of share links. The file extension is `.txt`.
+
+### v2rayN output
+
+Plain-text links you can copy and batch-import; no Base64 decoding required.
 
 ---
 
-## Author
+## 9. What the generated config looks like
 
-- Author: Toushou — <https://github.com/Toushou-114514/>
-- Repository: <https://github.com/Toushou-114514/IP-To-Subscription-File>
-- If you find it useful, a ⭐ on the repo is appreciated.
+A VLESS + WebSocket + CDN node in Clash:
+
+```yaml
+proxies:
+  - name: "Hong Kong-01"
+    type: vless
+    server: "104.16.0.1"
+    port: 443
+    uuid: "3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c"
+    udp: true
+    tls: true
+    servername: "my-node.abc.workers.dev"
+    client-fingerprint: chrome
+    network: ws
+    ws-opts:
+      path: "/?ed=2048"
+      headers:
+        Host: "my-node.abc.workers.dev"
+```
+
+The equivalent share link:
+
+```
+vless://3f2a1b4c-...@104.16.0.1:443?encryption=none&security=tls&sni=my-node.abc.workers.dev&host=my-node.abc.workers.dev&type=ws&path=%2F%3Fed%3D2048#Hong%20Kong-01
+```
+
+> Note that `server` is the preferred IP while `servername` / `Host` are the real domain. They are not interchangeable.
+
+---
+
+## 10. Importing into clients
+
+### Clash Verge / Clash Meta / ClashX
+
+1. Choose **Clash / Mihomo** → **Convert**
+2. Press **Download** to get `config.yaml`
+3. Client → **Profiles** → **Import**
+4. Pick the file
+5. Select the profile, then enable system proxy or TUN mode
+
+### sing-box (SFA / SFI / SFM)
+
+1. Choose **sing-box** → convert → download `config.json`
+2. Client → **Profiles** → `+` → **Import from file**
+3. Pick the file and activate it
+
+### Shadowrocket
+
+**Option A: file import**
+
+1. Choose **Shadowrocket** → convert → download `shadowrocket-sub.txt`
+2. Save it to the Files app
+3. Shadowrocket → `+` on the home screen → **Import from file**
+
+**Option B: subscription URL (recommended for updates)**
+
+1. Upload the generated txt to any static host (GitHub Pages, Gist)
+2. Shadowrocket → `+` → type **Subscribe**
+3. Paste the direct URL
+
+### v2rayN (Windows)
+
+1. Choose **v2rayN** → convert → **Copy**
+2. v2rayN → **Servers** → **Import bulk URL from clipboard**
+3. Select a node → **Set as active server**
+
+### Other clients
+
+Anything that accepts Clash YAML or share links will work:
+
+- Clash for Windows / Clash for Android: use the Clash format
+- NekoBox / Matsuri: use the v2rayN links
+- Stash / Loon: use the Clash format
+
+---
+
+## 11. Verifying it works
+
+Work through these in order; the first failure tells you which layer is broken.
+
+| Step | Action | Expected |
+| --- | --- | --- |
+| 1 | Open `https://disguise-domain` in a browser | Some response, even an error page |
+| 2 | Open `https://disguise-domain/path` | **400** or **426** |
+| 3 | Check the address-bar certificate | No warning |
+| 4 | Run a latency test in the client | A number, not everything timing out |
+| 5 | Connect and open `ip.sb` | Shows an IP that is not yours |
+
+> 400 / 426 is the normal answer a WebSocket endpoint gives to a plain browser request. It means "the path exists and the service is running".
+
+---
+
+## 12. Error reference
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| Everything times out | Wrong disguise domain or port; domain not behind CF; Worker not deployed | Verify the domain in a browser; try port 443 |
+| "Failed" / connection closed | UUID mismatch, or wrong WS path | Match the server's UUID; compare the path character by character |
+| 404 | Wrong WS path | Re-read the server config |
+| Certificate error | Disguise domain set to a preferred IP | Use the real domain |
+| Connects but no internet | Server PROXYIP setup, quota exhausted, or server routing | Check server logs and CF request counts |
+| Some nodes work, some do not | Mixed quality in the preferred IPs | Refresh the IP list; use the auto group |
+| Footer says "JavaScript is not running" | File corrupted by copy-paste (the `•••` case) | Download the file again instead of copying |
+| Empty output | No valid addresses in the input | Check the format and stray characters |
+
+### Self-check commands (desktop)
+
+```bash
+# Is the domain reachable?
+curl -s -o /dev/null -w "%{http_code}\n" https://your-domain
+
+# Is the path correct? (400 / 426 means yes)
+curl -s -o /dev/null -w "%{http_code}\n" https://your-domain/path
+
+# Is a preferred IP reachable?
+curl -s -o /dev/null -w "%{http_code}\n" --resolve your-domain:443:104.16.0.1 https://your-domain
+```
+
+---
+
+## 13. Deploying your own worker.js (recommended)
+
+> Standalone step-by-step guide (easy to save or share): **[Detailed worker.js tutorial](guide.en.md)**
+
+This guide ships with a minimal Worker (`worker.js` in the repository root). After deploying, open the domain and the page shows just two values: the disguise domain and the UUID. Copy them into this tool and you are done. No edgetunnel required — about 300 lines, VLESS over WebSocket only.
+
+### 13.1 How it differs from edgetunnel
+
+| | Bundled worker.js | edgetunnel |
+| --- | --- | --- |
+| Size | ~300 lines | several thousand |
+| What you edit | one UUID line | UUID, PROXYIP, path, ... |
+| Reading parameters after deploy | page shows domain + UUID | you piece them together yourself |
+| Path requirement | any path, not checked | must match the code |
+| Extra features | none | subscriptions, preferred IPs, more protocols |
+
+For personal use this is enough. Reach for edgetunnel only if you need subscription endpoints or extra protocols.
+
+### 13.2 What you need
+
+| Item | Notes |
+| --- | --- |
+| Cloudflare account | free: `dash.cloudflare.com` |
+| `worker.js` | repository root, or next to this tool |
+| A UUID | generated in the next step |
+| A browser | desktop is more comfortable |
+
+### 13.3 Generate a UUID
+
+1. Open `https://www.uuidgenerator.net/`
+2. Copy the first v4 UUID, e.g. `3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c`
+3. Keep it somewhere — you will use it twice (Worker code and this tool)
+
+> On Linux / macOS you can also run `uuidgen`.
+
+### 13.4 Create the Worker and paste the code
+
+1. Sign in at `dash.cloudflare.com`
+2. **Workers & Pages** → **Create** → **Worker**
+3. Name it `my-node` (anything works) → **Deploy**
+4. Press **Edit code** and delete the sample code
+5. Paste the entire contents of `worker.js`
+6. Find this line near the top:
+
+```js
+uuid: "00000000-0000-0000-0000-000000000000",
+```
+
+7. Replace the value with the UUID from step 13.3
+8. Press **Deploy**
+
+> If you would rather not hard-code the UUID, add a `UUID` variable under the Worker's **Settings → Variables**; the code prefers it.
+
+### 13.5 Open the page and copy both values
+
+After deployment, open:
+
+```
+https://my-node.username.workers.dev
+```
+
+The page has two rows:
+
+```
+Disguise domain   my-node.abc.workers.dev        [Copy]
+UUID              3f2a1b4c-8d5e-4f6a-9b7c-...     [Copy]
+```
+
+Press **Copy** on each.
+
+If the UUID row shows a red warning that it is still a placeholder, step 13.4.7 did not take effect — fix the code and deploy again.
+
+### 13.6 Fill them into the tool
+
+| Field | Value |
+| --- | --- |
+| Protocol | VLESS |
+| Port | 443 |
+| UUID | copied from the page |
+| Transport | WebSocket |
+| Disguise domain (Host / SNI) | copied from the page |
+| WS path | **leave the default** (the server does not check it) |
+| TLS | checked |
+| Node list | preferred IPs, one per line |
+
+### 13.7 Verify
+
+1. Open the Worker domain in a browser; the info page means the Worker is alive
+2. Press **Convert**, download the config, import it into your client
+3. Run a latency test in the client; a number means it connects. Then open `ip.sb` to confirm the exit IP changed
+4. If that fails, use the table below
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Page will not load / 522 / 1101 | Worker not deployed or script threw | Check Worker logs, deploy again |
+| Red placeholder warning on the page | `CONFIG.uuid` was not changed | Set a real UUID and deploy |
+| All nodes time out | Wrong disguise domain or port; TLS off | Verify the domain; port 443; enable TLS |
+| Nodes show "failed" | UUID does not match the Worker | Compare both strings character by character |
+| Connects but some sites fail | Destination uses UDP, or the port is restricted by Cloudflare | Try another site; UDP apps are unsupported |
+| 1015 / 429 | Rate limited | Wait, or reduce usage |
+
+### 13.8 Quotas and caveats
+
+- Workers free plan: roughly **100,000 requests per day** — fine for light use
+- TCP forwarding only; UDP apps (some games, voice chat) will not work
+- The info page is public: **anyone who knows the domain can read the UUID**, so do not post the domain publicly
+- Keep it for yourself; an open proxy gets rate-limited or banned quickly
+
+### 13.9 You can still use edgetunnel
+
+If you need subscription endpoints, extra protocols or PROXYIP, deploy edgetunnel as its repository describes, then fill in the values by hand:
+
+- UUID: `userID` in the code
+- Disguise domain: `xxx.workers.dev`
+- WS path: the path check in the code
+
+The only real difference: you have to dig the values out instead of copying them from a page.
+
+---
+
+## 14. Security and quotas
+
+### Security
+
+- UUID plus domain is effectively your account password; mask it in screenshots
+- Never use publicly shared nodes — the owner can see all your traffic
+- Rotate the UUID periodically (change it on the server, then regenerate)
+- Do not use configs from unknown sources on public Wi-Fi
+
+### Quotas
+
+- The Workers free plan allows roughly **100,000 requests per day**
+- Fine for light browsing, not for heavy downloads or 24/7 use
+- Check usage under **Workers & Pages → your Worker → Metrics**
+
+### Terms of service
+
+Running non-HTML traffic through the CDN sits in a grey area of Cloudflare's terms. Personal, light use is low risk; large-scale use or redistribution is not advisable.
+
+---
+
+## 15. FAQ
+
+**Do I need to buy a domain?**
+No. A Worker comes with a free `workers.dev` subdomain and a valid certificate.
+
+**Why must the UUID be filled in?**
+Left empty, the tool generates a random placeholder the server will never accept. It warns you but still lets you generate.
+
+**Do configs update automatically?**
+No. There is no auto-update feature; regenerate and re-import when you need a change.
+
+**Will nodes with the same country code collide?**
+No. If names would duplicate, the tool adds a number to keep them unique.
+
+**Why do all nodes fail even though the IPs are fine?**
+The IP is only the entry point. UUID, domain and path decide whether the connection succeeds.
+
+**Can I generate hundreds of nodes?**
+Yes, but clients load slowly. Keep 20–50 good ones.
+
+**How should I use the auto-select group?**
+Clash tests latency periodically and picks the fastest node. Use the manual group if you prefer to choose yourself.
+
+**Can I use the tool on a phone?**
+Yes, the layout is responsive and you can fill it in and download directly.
+
+**Can I host the YAML on GitHub as a subscription?**
+Yes. Upload it to any static host and point the client at the raw URL. The tool itself will not refresh that file.
+
+**Do I need to re-import after changing ports or IPs?**
+Yes: change parameters → convert → download → replace the profile in the client.
+
+---
+
+## 16. Quick reference
+
+### Input format
+
+```
+address[#CC Name]
+1.1.1.1
+1.1.1.1#HK Hong Kong
+1.1.1.1:2053#JP Japan
+[2400:cb00::1]:443#SG Singapore
+example.com#US United States
+```
+
+### Ports Cloudflare proxies
+
+```
+443  2053  2083  2087  2096  8443
+```
+
+### The three required values
+
+| Field | Where it comes from |
+| --- | --- |
+| UUID / password | The server (you generate it and put it there) |
+| Disguise domain | Worker address minus `https://` |
+| WS path | keep the default with the bundled `worker.js`; otherwise the path check in the server code |
+
+### Format → client
+
+| Format | Client |
+| --- | --- |
+| Clash / Mihomo | Clash Verge / Meta / ClashX |
+| sing-box | SFA / SFI / SFM |
+| Shadowrocket | Shadowrocket (Base64) |
+| v2rayN | v2rayN / v2rayNG / NekoBox |
+
+### Default file names
+
+| Format | File name |
+| --- | --- |
+| Clash | `config.yaml` |
+| sing-box | `config.json` |
+| Shadowrocket | `shadowrocket-sub.txt` |
+| v2rayN | `v2rayn-sub.txt` |
+
+---
+
+*Matches the current version: Host and SNI merged into one field, built-in Cloudflare guide, no auto-update feature, Simplified Chinese / Traditional Chinese / English UI. The bundled `worker.js` is the recommended server.*

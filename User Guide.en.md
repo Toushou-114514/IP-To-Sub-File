@@ -1,4 +1,4 @@
-# IP to Subscription File · Complete User Guide
+# IP to Sub File · Complete User Guide
 
 > Turn a list of IPs / domains into a config you can import straight into Clash, sing-box, Shadowrocket or v2rayN.
 > This guide covers: how the tool works, what every field means, how to use each output format, how to import it, and how to debug failures.
@@ -19,7 +19,7 @@
 10. [Importing into clients](#10-importing-into-clients)
 11. [Verifying it works](#11-verifying-it-works)
 12. [Error reference](#12-error-reference)
-13. [Where the server comes from (Cloudflare Worker)](#13-where-the-server-comes-from-cloudflare-worker)
+13. [Deploying your own worker.js](#13-deploying-your-own-workerjs-recommended)
 14. [Security and quotas](#14-security-and-quotas)
 15. [FAQ](#15-faq)
 16. [Quick reference](#16-quick-reference)
@@ -338,6 +338,8 @@ Common values: `/`, `/ws`, `/ray`, `/vless`, `/?ed=2048`.
 
 **The path must match character for character** — one wrong character gives a 404.
 
+> With the bundled `worker.js`, the server does not check the path, so the default value is fine.
+
 ### 6.9 TLS / skip certificate verification
 
 | Checkbox | Applies to | Notes |
@@ -543,54 +545,123 @@ curl -s -o /dev/null -w "%{http_code}\n" --resolve your-domain:443:104.16.0.1 ht
 
 ---
 
-## 13. Where the server comes from (Cloudflare Worker)
+## 13. Deploying your own worker.js (recommended)
 
-The tool does not provide routes. The cheapest free option is a Cloudflare Worker.
+> Standalone step-by-step guide (easy to save or share): **[Detailed worker.js tutorial](guide.en.md)**
 
-### 13.1 Generate a UUID
+This guide ships with a minimal Worker (`worker.js` in the repository root). After deploying, open the domain and the page shows just two values: the disguise domain and the UUID. Copy them into this tool and you are done. No edgetunnel required — about 300 lines, VLESS over WebSocket only.
 
-Open `https://www.uuidgenerator.net/` and copy the first v4 UUID.
+### 13.1 How it differs from edgetunnel
 
-### 13.2 Deploy the Worker
+| | Bundled worker.js | edgetunnel |
+| --- | --- | --- |
+| Size | ~300 lines | several thousand |
+| What you edit | one UUID line | UUID, PROXYIP, path, ... |
+| Reading parameters after deploy | page shows domain + UUID | you piece them together yourself |
+| Path requirement | any path, not checked | must match the code |
+| Extra features | none | subscriptions, preferred IPs, more protocols |
+
+For personal use this is enough. Reach for edgetunnel only if you need subscription endpoints or extra protocols.
+
+### 13.2 What you need
+
+| Item | Notes |
+| --- | --- |
+| Cloudflare account | free: `dash.cloudflare.com` |
+| `worker.js` | repository root, or next to this tool |
+| A UUID | generated in the next step |
+| A browser | desktop is more comfortable |
+
+### 13.3 Generate a UUID
+
+1. Open `https://www.uuidgenerator.net/`
+2. Copy the first v4 UUID, e.g. `3f2a1b4c-8d5e-4f6a-9b7c-1d2e3f4a5b6c`
+3. Keep it somewhere — you will use it twice (Worker code and this tool)
+
+> On Linux / macOS you can also run `uuidgen`.
+
+### 13.4 Create the Worker and paste the code
 
 1. Sign in at `dash.cloudflare.com`
-2. **Workers & Pages** → **Create** → **Workers**
-3. Name it something like `my-node` → **Deploy**
-4. Press **Edit code** and delete the sample
-5. Paste a ready-made script (for example `worker.js` from `cmliu/edgetunnel` on GitHub)
-6. Find `let userID = '...'` and replace it with your UUID
-7. Note the path check, e.g. `url.pathname === '/?ed=2048'`
+2. **Workers & Pages** → **Create** → **Worker**
+3. Name it `my-node` (anything works) → **Deploy**
+4. Press **Edit code** and delete the sample code
+5. Paste the entire contents of `worker.js`
+6. Find this line near the top:
+
+```js
+uuid: "00000000-0000-0000-0000-000000000000",
+```
+
+7. Replace the value with the UUID from step 13.3
 8. Press **Deploy**
 
-### 13.3 Get the disguise domain
+> If you would rather not hard-code the UUID, add a `UUID` variable under the Worker's **Settings → Variables**; the code prefers it.
 
-After deployment you get an address like:
+### 13.5 Open the page and copy both values
+
+After deployment, open:
 
 ```
 https://my-node.username.workers.dev
 ```
 
-Strip `https://` and the trailing `/`:
+The page has two rows:
 
 ```
-my-node.username.workers.dev
+Disguise domain   my-node.abc.workers.dev        [Copy]
+UUID              3f2a1b4c-8d5e-4f6a-9b7c-...     [Copy]
 ```
 
-That is the disguise domain. The certificate is issued by Cloudflare automatically.
+Press **Copy** on each.
 
-### 13.4 Fill it back into the tool
+If the UUID row shows a red warning that it is still a placeholder, step 13.4.7 did not take effect — fix the code and deploy again.
+
+### 13.6 Fill them into the tool
 
 | Field | Value |
 | --- | --- |
 | Protocol | VLESS |
 | Port | 443 |
-| UUID | The one you generated |
+| UUID | copied from the page |
 | Transport | WebSocket |
-| Disguise domain | `my-node.username.workers.dev` |
-| WS path | `/?ed=2048` (whatever the code says) |
-| Node list | Preferred IPs, one per line |
+| Disguise domain (Host / SNI) | copied from the page |
+| WS path | **leave the default** (the server does not check it) |
+| TLS | checked |
+| Node list | preferred IPs, one per line |
 
-> The collapsible "How do I get a UUID and a disguise domain? (Cloudflare)" block on the page is a condensed version of this section.
+### 13.7 Verify
+
+1. Open the Worker domain in a browser; the info page means the Worker is alive
+2. Press **Convert**, download the config, import it into your client
+3. Run a latency test in the client; a number means it connects. Then open `ip.sb` to confirm the exit IP changed
+4. If that fails, use the table below
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Page will not load / 522 / 1101 | Worker not deployed or script threw | Check Worker logs, deploy again |
+| Red placeholder warning on the page | `CONFIG.uuid` was not changed | Set a real UUID and deploy |
+| All nodes time out | Wrong disguise domain or port; TLS off | Verify the domain; port 443; enable TLS |
+| Nodes show "failed" | UUID does not match the Worker | Compare both strings character by character |
+| Connects but some sites fail | Destination uses UDP, or the port is restricted by Cloudflare | Try another site; UDP apps are unsupported |
+| 1015 / 429 | Rate limited | Wait, or reduce usage |
+
+### 13.8 Quotas and caveats
+
+- Workers free plan: roughly **100,000 requests per day** — fine for light use
+- TCP forwarding only; UDP apps (some games, voice chat) will not work
+- The info page is public: **anyone who knows the domain can read the UUID**, so do not post the domain publicly
+- Keep it for yourself; an open proxy gets rate-limited or banned quickly
+
+### 13.9 You can still use edgetunnel
+
+If you need subscription endpoints, extra protocols or PROXYIP, deploy edgetunnel as its repository describes, then fill in the values by hand:
+
+- UUID: `userID` in the code
+- Disguise domain: `xxx.workers.dev`
+- WS path: the path check in the code
+
+The only real difference: you have to dig the values out instead of copying them from a page.
 
 ---
 
@@ -674,7 +745,7 @@ example.com#US United States
 | --- | --- |
 | UUID / password | The server (you generate it and put it there) |
 | Disguise domain | Worker address minus `https://` |
-| WS path | The path check in the server code |
+| WS path | keep the default with the bundled `worker.js`; otherwise the path check in the server code |
 
 ### Format → client
 
@@ -696,4 +767,4 @@ example.com#US United States
 
 ---
 
-*Matches the current version: Host and SNI merged into one field, built-in Cloudflare guide, no auto-update feature.*
+*Matches the current version: Host and SNI merged into one field, built-in Cloudflare guide, no auto-update feature, Simplified Chinese / Traditional Chinese / English UI. The bundled `worker.js` is the recommended server.*
